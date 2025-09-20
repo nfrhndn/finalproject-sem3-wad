@@ -2,6 +2,7 @@ interface FormCheckinProps {
   onCheckin: (
     nomorPolisi: string,
     jenisKendaraan: string,
+    estimasiJam: number,
     metode: string //
   ) => void;
 }
@@ -12,14 +13,15 @@ export default function FormCheckin({ onCheckin }: FormCheckinProps) {
     const formData = new FormData(e.currentTarget);
     const platNomor = formData.get("plat-nomor") as string;
     const jenis = formData.get("jenis-kendaraan") as string;
+    const estimasi = parseInt(formData.get("estimasi-jam") as string, 10);
     const metode = formData.get("metode-bayar") as string; //
 
-    if (!platNomor || !jenis || !metode) {
-      alert("Plat nomor, jenis kendaraan, dan metode wajib diisi!");
+    if (!platNomor || !jenis || isNaN(estimasi) || !metode) {
+      alert("Plat nomor, jenis kendaraan, estimasi jam, dan metode wajib diisi!");
       return;
     }
 
-    onCheckin(platNomor.toUpperCase(), jenis, metode);
+    onCheckin(platNomor.toUpperCase(), jenis, estimasi, metode);
     e.currentTarget.reset();
   }
 
@@ -40,6 +42,17 @@ export default function FormCheckin({ onCheckin }: FormCheckinProps) {
             <option value="mobil">Mobil</option>
             <option value="motor">Motor</option>
             <option value="truk">Truk</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="estimasi-jam">Estimasi Parkir</label>
+          <select id="estimasi-jam" name="estimasi-jam" className="form-control" required>
+            <option value="">Pilih Durasi</option>
+            <option value="1">1 Jam</option>
+            <option value="2">2 Jam</option>
+            <option value="3">3 Jam</option>
+            <option value="4">4 Jam</option>
+            <option value="5">5 Jam</option>
           </select>
         </div>
         <div className="form-group">
