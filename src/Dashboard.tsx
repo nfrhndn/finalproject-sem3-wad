@@ -59,7 +59,6 @@ export default function Dashboard() {
   function handleCheckin(
     nomorPolisi: string,
     jenisKendaraan: string,
-    estimasiJam: number,
     metode: string
   ) {
     const slotIndex = slots.findIndex((s) => !s.occupied);
@@ -86,7 +85,7 @@ export default function Dashboard() {
     setLogs((prev) => [
       {
         time: new Date().toLocaleTimeString("id-ID"),
-        message: `Kendaraan ${jenisKendaraan.toUpperCase()} ${nomorPolisi} masuk ke slot ${slotId}, tiket: ${ticketCode}, estimasi: ${estimasiJam} jam, metode: ${metode}`,
+        message: `Kendaraan ${jenisKendaraan.toUpperCase()} ${nomorPolisi} masuk ke slot ${slotId}, tiket: ${ticketCode}, metode: ${metode}`,
       },
       ...prev,
     ]);
