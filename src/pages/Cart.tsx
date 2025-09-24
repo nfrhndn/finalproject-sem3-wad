@@ -29,83 +29,95 @@ const Cart = () => {
   const total = selectedSeats.length * order.price;
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-6">Keranjang Pesanan</h1>
+    <div className="container mx-auto px-4 py-10 min-h-[70vh]">
+      <h1 className="text-3xl font-bold mb-6 text-center text-cyan-600">
+        Keranjang Pesanan
+      </h1>
 
-      <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-md mb-6">
-        <img
-          src={order.poster}
-          alt={order.title}
-          className="w-24 h-32 object-cover rounded-lg"
-        />
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold">{order.title}</h2>
-          <p className="text-gray-600">{order.cinema}</p>
-          <p className="text-gray-600">Jam: {order.time}</p>
-          <p className="text-gray-600">
-            Harga per tiket: Rp{order.price.toLocaleString()}
-          </p>
-          <p className="font-bold text-cyan-600">
-            Total: Rp{total.toLocaleString()}
+
+      {selectedSeats.length === 0 ? (
+        <div className="flex justify-center items-center h-[50vh]">
+          <p className="text-center text-gray-600 text-lg font-medium">
+            Anda belum melakukan pemesanan
           </p>
         </div>
-        <button className="p-2 text-red-500 hover:text-red-700">
-          <Trash2 className="w-6 h-6" />
-        </button>
-      </div>
-
-      <div className="bg-gray-100 p-6 rounded-xl shadow-md text-center">
-        <h2 className="text-xl font-bold mb-4">Pilih Kursi</h2>
-
-        <div className="bg-gray-300 h-6 mb-6 rounded-lg">LAYAR</div>
-
-        <div className="inline-block space-y-3">
-          {rows.map((row) => (
-            <div key={row} className="flex justify-center gap-2">
-              {cols.map((col) => {
-                const seat = `${row}${col}`;
-                const isOccupied = occupiedSeats.includes(seat);
-                const isSelected = selectedSeats.includes(seat);
-
-                return (
-                  <button
-                    key={seat}
-                    onClick={() => toggleSeat(seat)}
-                    disabled={isOccupied}
-                    className={`w-10 h-10 rounded-lg text-sm font-semibold
-                      ${
-                        isOccupied
-                          ? "bg-red-500 text-white cursor-not-allowed"
-                          : isSelected
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-200 hover:bg-cyan-400 hover:text-white"
-                      }`}
-                  >
-                    {seat}
-                  </button>
-                );
-              })}
+      ) : (
+        <>
+          <div className="flex items-center gap-4 p-4 bg-cyan-600 rounded-xl shadow-md mb-6 text-white">
+            <img
+              src={order.poster}
+              alt={order.title}
+              className="w-24 h-32 object-cover rounded-lg"
+            />
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold">{order.title}</h2>
+              <p>{order.cinema}</p>
+              <p>Jam: {order.time}</p>
+              <p>
+                Harga per tiket: Rp{order.price.toLocaleString()}
+              </p>
+              <p className="font-bold">
+                Total: Rp{total.toLocaleString()}
+              </p>
             </div>
-          ))}
-        </div>
+            <button className="p-2 text-red-300 hover:text-red-500">
+              <Trash2 className="w-6 h-6" />
+            </button>
+          </div>
 
-        <div className="mt-6 p-4 bg-white rounded-lg shadow flex justify-between items-center">
-          <p className="font-medium">
-            Kursi dipilih:{" "}
-            {selectedSeats.length > 0 ? selectedSeats.join(", ") : "-"}
-          </p>
-          <p className="font-bold text-cyan-600">
-            Total: Rp{total.toLocaleString()}
-          </p>
-        </div>
+          <div className="bg-gray-100 p-6 rounded-xl shadow-md text-center">
+            <h2 className="text-xl font-bold mb-4">Pilih Kursi</h2>
 
-        <button
-          disabled={selectedSeats.length === 0}
-          className="mt-4 w-full py-3 bg-cyan-600 text-white font-semibold rounded-xl shadow hover:bg-cyan-700 transition disabled:opacity-50"
-        >
-          Lanjutkan ke Pembayaran
-        </button>
-      </div>
+            <div className="bg-gray-300 h-6 mb-6 rounded-lg">LAYAR</div>
+
+            <div className="inline-block space-y-3">
+              {rows.map((row) => (
+                <div key={row} className="flex justify-center gap-2">
+                  {cols.map((col) => {
+                    const seat = `${row}${col}`;
+                    const isOccupied = occupiedSeats.includes(seat);
+                    const isSelected = selectedSeats.includes(seat);
+
+                    return (
+                      <button
+                        key={seat}
+                        onClick={() => toggleSeat(seat)}
+                        disabled={isOccupied}
+                        className={`w-10 h-10 rounded-lg text-sm font-semibold
+                          ${
+                            isOccupied
+                              ? "bg-red-500 text-white cursor-not-allowed"
+                              : isSelected
+                              ? "bg-green-500 text-white"
+                              : "bg-gray-200 hover:bg-cyan-400 hover:text-white"
+                          }`}
+                      >
+                        {seat}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 p-4 bg-white rounded-lg shadow flex justify-between items-center">
+              <p className="font-medium">
+                Kursi dipilih: {selectedSeats.length > 0 ? selectedSeats.join(", ") : "-"}
+              </p>
+              <p className="font-bold text-cyan-600">
+                Total: Rp{total.toLocaleString()}
+              </p>
+            </div>
+
+            <button
+              disabled={selectedSeats.length === 0}
+              className="mt-4 w-full py-3 bg-cyan-600 text-white font-semibold rounded-xl shadow hover:bg-cyan-700 transition disabled:opacity-50"
+            >
+              Lanjutkan ke Pembayaran
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
