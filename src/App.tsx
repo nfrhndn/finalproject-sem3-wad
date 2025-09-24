@@ -1,12 +1,15 @@
 import { Routes, Route } from "react-router-dom";
-import AuthPage from "./components/AuthPage";
-import Dashboard from "./Dashboard";
+import Home from "./pages/Home";
 
-export default function App() {
+
+function App() {
   return (
     <Routes>
-      <Route path="/" element={<AuthPage />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/" element={<Home />} />
+      {/* <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} /> */}
     </Routes>
   );
 }
+
+export default App;
