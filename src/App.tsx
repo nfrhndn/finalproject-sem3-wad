@@ -5,6 +5,10 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Film from "./pages/Film";
+import About from "./pages/About";
+import NotFound from "./pages/NotFound";
+import Cart from "./pages/Cart";
 
 const App = () => {
   const location = useLocation();
@@ -17,10 +21,9 @@ const App = () => {
       {!hideLayout && <Navbar />}
 
       <main
-        className={`flex-grow ${hideLayout
-          ? "bg-gradient-to-r from-cyan-500 to-blue-600"
-          : "bg-white"
-          }`}
+        className={`flex-grow ${
+          hideLayout ? "bg-gradient-to-r from-cyan-500 to-blue-600" : "bg-white"
+        }`}
       >
         {hideLayout && (
           <button
@@ -34,8 +37,13 @@ const App = () => {
 
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/film" element={<Film />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<About />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/cart" element={<Cart />} />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
 
