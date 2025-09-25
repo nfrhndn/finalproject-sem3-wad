@@ -1,14 +1,11 @@
-import { Clock, Star } from "lucide-react";
-
-type Props = {
+type MovieCardProps = {
   title: string;
   genre: string;
   description: string;
   duration: string;
   rating: number;
   image?: string;
-  showBooking?: boolean;
-  onPesan?: () => void;
+  onPesan: () => void;
 };
 
 const MovieCard = ({
@@ -18,43 +15,23 @@ const MovieCard = ({
   duration,
   rating,
   image,
-  showBooking = true,
   onPesan,
-}: Props) => {
+}: MovieCardProps) => {
   return (
-    <div className="bg-white shadow rounded-xl overflow-hidden hover:shadow-lg transition flex flex-col">
-      <div className="h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
-        {image ? (
-          <img src={image} alt={title} className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-4xl">🎬</span>
-        )}
-      </div>
-
-      <div className="p-4 flex flex-col flex-grow">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="font-bold text-lg">{title}</h3>
-          <span className="flex items-center gap-1 text-sm text-cyan-600">
-            <Star className="w-4 h-4 text-cyan-600" /> {rating}
-          </span>
-        </div>
-        <p className="text-sm text-gray-500 mb-1">{genre}</p>
-        <p className="text-sm text-gray-600 mb-3 flex-grow">{description}</p>
-
-        <div className="flex justify-between items-center text-sm text-gray-600">
-          <span className="flex items-center gap-1">
-            <Clock className="w-4 h-4" /> {duration}
-          </span>
-
-          {showBooking && onPesan && (
-            <button
-              onClick={onPesan}
-              className="px-3 py-1 bg-gradient-to-r from-cyan-600 to-blue-500 text-white rounded-lg hover:bg-cyan-700 text-sm"
-            >
-              Pesan
-            </button>
-          )}
-        </div>
+    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      {image && <img src={image} alt={title} className="w-full h-64 object-cover" />}
+      <div className="p-4">
+        <h3 className="text-lg font-bold">{title}</h3>
+        <p className="text-sm text-gray-600">{genre}</p>
+        <p className="text-sm mt-2">{description}</p>
+        <p className="text-sm text-gray-500 mt-1">{duration}</p>
+        <p className="text-sm font-semibold mt-1">⭐ {rating}</p>
+        <button
+          onClick={onPesan}
+          className="mt-3 w-full bg-cyan-600 text-white py-2 rounded-lg hover:bg-gray-500"
+        >
+          Pesan
+        </button>
       </div>
     </div>
   );
