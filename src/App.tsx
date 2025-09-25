@@ -9,6 +9,7 @@ import Film from "./pages/Film";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 
 const App = () => {
   const location = useLocation();
@@ -43,6 +44,7 @@ const App = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/film/:id" element={<Film />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout/:movieId" element={<Checkout />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

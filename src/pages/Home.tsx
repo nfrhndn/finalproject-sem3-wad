@@ -6,8 +6,7 @@ import CinemaCard from "../components/CinemaCard";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
+import "swiper/swiper-bundle.css";
 
 interface Movie {
   id: number;
@@ -25,7 +24,6 @@ const Home = () => {
   const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
   const BASE_URL = "https://api.themoviedb.org/3";
 
-  // Fetch film "Now Playing"
   useEffect(() => {
     const fetchMovies = async () => {
       try {
@@ -41,7 +39,6 @@ const Home = () => {
     fetchMovies();
   }, [API_KEY]);
 
-  // Ambil trailer YouTube
   const handleTrailer = async (movieId: number) => {
     try {
       const res = await fetch(
@@ -61,12 +58,11 @@ const Home = () => {
     }
   };
 
-  // Beli tiket → login dulu jika belum
-  const handlePesanTiket = () => {
+  const handlePesanTiket = (movieId: number) => {
     if (!user) {
       navigate("/login");
     } else {
-      navigate("/cart");
+      navigate(`/checkout/${movieId}`);
     }
   };
 
@@ -74,7 +70,6 @@ const Home = () => {
     <div>
       <Hero />
 
-      {/* Film Sedang Tayang */}
       <section className="container mx-auto px-4 py-10 relative">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Sedang Tayang</h2>
@@ -101,7 +96,6 @@ const Home = () => {
           {movies.map((movie) => (
             <SwiperSlide key={movie.id}>
               <div className="relative group rounded-xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-                {/* Poster dengan aspect ratio 2:3 */}
                 <div className="w-full aspect-[2/3]">
                   <img
                     src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -110,12 +104,10 @@ const Home = () => {
                   />
                 </div>
 
-                {/* Label atas */}
                 <span className="absolute top-3 left-3 bg-cyan-600 text-white text-xs px-3 py-1 rounded-md">
                   Tiket Tersedia
                 </span>
 
-                {/* Overlay saat hover */}
                 <div className="absolute inset-0 bg-black bg-opacity-70 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-3 transition">
                   <h3 className="text-white font-bold text-lg text-center px-2">
                     {movie.title}
@@ -127,7 +119,7 @@ const Home = () => {
                     Lihat Trailer
                   </button>
                   <button
-                    onClick={handlePesanTiket}
+                    onClick={() => handlePesanTiket(movie.id)}
                     className="px-5 py-2 bg-cyan-600 text-white rounded-full hover:bg-cyan-700 transition"
                   >
                     Beli Tiket
@@ -138,7 +130,6 @@ const Home = () => {
           ))}
         </Swiper>
 
-        {/* Custom Navigation */}
         <button className="swiper-button-prev-custom absolute top-1/2 -left-12 z-10 border-2 border-cyan-600 text-cyan-600 rounded-full w-12 h-12 flex items-center justify-center hover:bg-cyan-600 hover:text-white transition transform -translate-y-1/2 text-2xl font-bold">
           ←
         </button>
@@ -147,7 +138,6 @@ const Home = () => {
         </button>
       </section>
 
-      {/* Popup Trailer */}
       {trailerUrl && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="w-11/12 md:w-3/4 lg:w-1/2 bg-black rounded-xl overflow-hidden">
@@ -170,7 +160,6 @@ const Home = () => {
         </div>
       )}
 
-      {/* Lokasi Bioskop */}
       <section className="container mx-auto px-4 py-10">
         <h2 className="text-2xl font-bold mb-6">Lokasi Bioskop</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
