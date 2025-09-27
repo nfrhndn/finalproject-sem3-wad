@@ -6,7 +6,7 @@ interface MovieCardProps {
   posterPath: string;
   onTrailer: (id: number) => void;
   onPesan: (id: number) => void;
-  isUpcoming?: boolean; // tambahan
+  isUpcoming?: boolean;
 }
 
 const MovieCard: React.FC<MovieCardProps> = ({
@@ -15,7 +15,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
   posterPath,
   onTrailer,
   onPesan,
-  isUpcoming = false
+  isUpcoming = false,
 }) => {
   return (
     <div className="relative group rounded-xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
@@ -27,7 +27,6 @@ const MovieCard: React.FC<MovieCardProps> = ({
         />
       </div>
 
-      {/* Badge hanya muncul kalau bukan upcoming */}
       {!isUpcoming && (
         <span className="absolute top-3 left-3 bg-cyan-600 text-white text-xs px-3 py-1 rounded-md">
           Tiket Tersedia
@@ -35,7 +34,9 @@ const MovieCard: React.FC<MovieCardProps> = ({
       )}
 
       <div className="absolute inset-0 bg-black bg-opacity-70 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-3 transition">
-        <h3 className="text-white font-bold text-lg text-center px-2">{title}</h3>
+        <h3 className="text-white font-bold text-lg text-center px-2">
+          {title}
+        </h3>
         <button
           onClick={() => onTrailer(id)}
           className="px-5 py-2 bg-white text-black rounded-full hover:bg-gray-300 transition"
@@ -43,7 +44,6 @@ const MovieCard: React.FC<MovieCardProps> = ({
           Lihat Trailer
         </button>
 
-        {/* Tombol beli tiket hanya untuk sedang tayang */}
         {!isUpcoming && (
           <button
             onClick={() => onPesan(id)}

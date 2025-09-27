@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import Hero from "../components/Hero";
 import CinemaCard from "../components/CinemaCard";
 import MoviesSlider from "../components/MoviesSlider";
+import { fetchPopularMovies, fetchMovieDetail } from "../Services/api";
 
 interface Movie {
   id: number;
@@ -18,35 +19,30 @@ const Home = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
 
-  const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-  const BASE_URL = "https://api.themoviedb.org/3";
-
   useEffect(() => {
-    const fetchMovies = async () => {
+    const loadMovies = async () => {
       try {
-        const res = await fetch(
-          `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=id-ID&page=1`
-        );
-        const data = await res.json();
+        const data = await fetchPopularMovies();
         setMovies(data.results.slice(0, 10));
       } catch (error) {
         console.error("Gagal fetch film:", error);
       }
     };
-    fetchMovies();
-  }, [API_KEY]);
+    loadMovies();
+  }, []);
 
   const handleTrailer = async (movieId: number) => {
     try {
-      const res = await fetch(
-        `${BASE_URL}/movie/${movieId}/videos?api_key=${API_KEY}&language=en-US`
-      );
-      const data = await res.json();
-      const youtubeVideo = data.results.find(
-        (vid: any) => vid.site === "YouTube" && vid.type === "Trailer"
-      );
-      if (youtubeVideo) {
-        setTrailerKey(youtubeVideo.key);
+      const data = await fetchMovieDetail(movieId);
+      if (data.videos && data.videos.results) {
+        const youtubeVideo = data.videos.results.find(
+          (vid: any) => vid.site === "YouTube" && vid.type === "Trailer"
+        );
+        if (youtubeVideo) {
+          setTrailerKey(youtubeVideo.key);
+        } else {
+          alert("Trailer tidak tersedia.");
+        }
       } else {
         alert("Trailer tidak tersedia.");
       }
@@ -74,7 +70,6 @@ const Home = () => {
         onSeeAll={() => navigate("/film")}
       />
 
-      {/* Modal Trailer */}
       {trailerKey && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-black rounded-lg overflow-hidden w-[80%] max-w-3xl">

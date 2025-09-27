@@ -93,10 +93,8 @@ const Cart = () => {
   const handlePayment = () => {
     if (selectedCartItems.length === 0 || !selectedPayment) return;
 
-    // ambil tiket lama
     const existingTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
 
-    // generate kode booking unik
     const generateBookingCode = (prefix: string) => {
       return (
         prefix.toUpperCase().slice(0, 3) +
@@ -104,61 +102,58 @@ const Cart = () => {
       );
     };
 
-    // buat tiket baru
     const newTickets = selectedCartItems.map((item) => ({
       ...item,
       bookingCode: generateBookingCode(item.title),
-      // pastikan poster pakai TMDB
       poster: item.poster?.startsWith("http")
         ? item.poster
         : `https://image.tmdb.org/t/p/w500${item.poster}`,
-      date: new Date().toISOString().split("T")[0], // tanggal hari ini
+      date: new Date().toISOString().split("T")[0],
     }));
 
-    // simpan tiket ke localStorage
-    localStorage.setItem("tickets", JSON.stringify([...existingTickets, ...newTickets]));
+    localStorage.setItem(
+      "tickets",
+      JSON.stringify([...existingTickets, ...newTickets])
+    );
 
-    // hapus item yang sudah dibayar dari cart
-    const remainingCart = cart.filter((item) => !selectedItems.includes(item.id));
+    const remainingCart = cart.filter(
+      (item) => !selectedItems.includes(item.id)
+    );
     setCart(remainingCart);
     localStorage.setItem("cart", JSON.stringify(remainingCart));
 
     alert("Pembayaran berhasil! Tiket sudah ditambahkan ke riwayat.");
 
-    // redirect ke halaman tiket
     navigate("/tiket-saya");
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
       <div className="flex items-center justify-center gap-2 mb-8">
         <ShoppingCart className="text-cyan-600 w-7 h-7" />
         <h1 className="text-2xl font-bold text-cyan-700">Keranjang Saya</h1>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
-        {/* Daftar item */}
         <div className="md:col-span-2 flex flex-col gap-6">
           {cart.length === 0 ? (
             <p className="text-center text-gray-600">
               Keranjang masih kosong. Silakan pilih tiket terlebih dahulu.
             </p>
           ) : (
-              cart.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white border rounded-lg p-5 shadow flex justify-between items-start gap-4"
-                >
-                  {/* Checkbox + Poster */}
-                  <div className="flex gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.includes(item.id)}
-                      onChange={() => handleCheckbox(item.id)}
-                      className="mt-2 w-5 h-5"
-                    />
-                    <img
+            cart.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white border rounded-lg p-5 shadow flex justify-between items-start gap-4"
+              >
+                <div className="flex gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(item.id)}
+                    onChange={() => handleCheckbox(item.id)}
+                    className="mt-2 w-5 h-5"
+                  />
+                  <img
                     src={
                       item.poster?.startsWith("http")
                         ? item.poster
@@ -169,7 +164,6 @@ const Cart = () => {
                   />
                 </div>
 
-                {/* Info Film */}
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold">{item.title}</h2>
                   <div className="flex items-center text-sm text-gray-600 gap-6 mt-2">
@@ -200,7 +194,6 @@ const Cart = () => {
                   </p>
                 </div>
 
-                {/* Icon Aksi */}
                 <div className="flex gap-4 items-start">
                   <button
                     onClick={() => handleEdit(item)}
@@ -220,7 +213,6 @@ const Cart = () => {
           )}
         </div>
 
-        {/* Rincian Pesanan */}
         {cart.length > 0 && (
           <div className="bg-white border rounded-lg p-5 shadow h-fit sticky top-20">
             <h2 className="text-lg font-semibold mb-4">Rincian Pesanan</h2>
@@ -246,12 +238,10 @@ const Cart = () => {
               <span>Rp {totalAmount.toLocaleString("id-ID")}</span>
             </div>
 
-            {/* Label Metode Pembayaran */}
             <p className="mt-5 mb-2 text-sm font-semibold text-gray-700">
               Metode Pembayaran
             </p>
 
-            {/* Dropdown Pembayaran */}
             <div>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
@@ -308,14 +298,14 @@ const Cart = () => {
               )}
             </div>
 
-            {/* Tombol Bayar */}
             <button
               onClick={handlePayment}
               disabled={selectedCartItems.length === 0 || !selectedPayment}
-              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${selectedCartItems.length > 0 && selectedPayment
-                ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 cursor-pointer"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
+              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${
+                selectedCartItems.length > 0 && selectedPayment
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 cursor-pointer"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Bayar Sekarang
             </button>

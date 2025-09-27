@@ -1,16 +1,17 @@
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const BASE_URL = "https://api.themoviedb.org/3";
+const BASE_URL = "http://localhost:5000/api/movies";
 
 export const fetchPopularMovies = async () => {
-    const res = await fetch(
-        `${BASE_URL}/movie/popular?api_key=${API_KEY}&language=id-ID&page=1`
-    );
-    return res.json();
+  const res = await fetch(`${BASE_URL}/popular`);
+  if (!res.ok) {
+    throw new Error("Gagal fetch popular movies");
+  }
+  return res.json();
 };
 
 export const fetchMovieDetail = async (id: number) => {
-    const res = await fetch(
-        `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=id-ID`
-    );
-    return res.json();
+  const res = await fetch(`${BASE_URL}/${id}`);
+  if (!res.ok) {
+    throw new Error("Gagal fetch movie detail");
+  }
+  return res.json();
 };
