@@ -1,123 +1,334 @@
-import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ShoppingCart,
+  Trash2,
+  Pencil,
+  Film,
+  Clock3,
+  ChevronDown,
+} from "lucide-react";
+
+interface CartItem {
+  id: number;
+  movieId: number;
+  title: string;
+  poster: string;
+  cinema: string;
+  time: string;
+  seats: string[];
+  price?: number;
+  total?: number;
+}
 
 const Cart = () => {
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const order = {
-    id: 1,
-    title: "Spider-Man: No Way Home",
-    cinema: "Cinema XXI Plaza Senayan",
-    time: "19:00 WIB",
-    price: 50000,
-    poster:
-      "https://upload.wikimedia.org/wikipedia/en/0/00/Spider-Man_No_Way_Home_poster.jpg",
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+      setCart(storedCart);
+    } catch (error) {
+      console.error("Gagal parse cart:", error);
+      setCart([]);
+    }
+  }, []);
+
+  const handleRemove = (id: number) => {
+    const updatedCart = cart.filter((item) => item.id !== id);
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    setSelectedItems((prev) => prev.filter((i) => i !== id));
   };
 
-  const occupiedSeats = ["A1", "B5", "C3", "D7"];
+  const handleEdit = (item: CartItem) => {
+    localStorage.setItem("editItem", JSON.stringify(item));
+    navigate(`/checkout/${item.movieId}`);
+  };
 
-  const rows = ["A", "B", "C", "D", "E", "F"];
-  const cols = Array.from({ length: 10 }, (_, i) => i + 1);
-
-  const toggleSeat = (seat: string) => {
-    if (occupiedSeats.includes(seat)) return;
-    setSelectedSeats((prev) =>
-      prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat]
+  const handleCheckbox = (id: number) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
-  const total = selectedSeats.length * order.price;
+  const selectedCartItems = cart.filter((item) =>
+    selectedItems.includes(item.id)
+  );
+
+  const totalAmount = selectedCartItems.reduce(
+    (acc, item) => acc + (item.total ?? 0),
+    0
+  );
+
+  const paymentOptions = [
+    {
+      category: "Bank",
+      options: [
+        { name: "Mandiri", icon: "/icons/mandiri.png" },
+        { name: "BNI", icon: "/icons/bni.png" },
+        { name: "Permata Bank", icon: "/icons/permatabank.png" },
+        { name: "Bank BRI", icon: "/icons/bri.png" },
+      ],
+    },
+    {
+      category: "E-Wallet",
+      options: [
+        { name: "Gopay", icon: "/icons/gopay.png" },
+        { name: "Dana", icon: "/icons/dana.png" },
+        { name: "Ovo", icon: "/icons/ovo.png" },
+      ],
+    },
+    {
+      category: "QRIS",
+      options: [{ name: "QRIS", icon: "/icons/qris.png" }],
+    },
+  ];
+
+  const handlePayment = () => {
+    if (selectedCartItems.length === 0 || !selectedPayment) return;
+
+    // ambil tiket lama
+    const existingTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
+
+    // generate kode booking unik
+    const generateBookingCode = (prefix: string) => {
+      return (
+        prefix.toUpperCase().slice(0, 3) +
+        Math.floor(100000 + Math.random() * 900000).toString()
+      );
+    };
+
+    // buat tiket baru
+    const newTickets = selectedCartItems.map((item) => ({
+      ...item,
+      bookingCode: generateBookingCode(item.title),
+      // pastikan poster pakai TMDB
+      poster: item.poster?.startsWith("http")
+        ? item.poster
+        : `https://image.tmdb.org/t/p/w500${item.poster}`,
+      date: new Date().toISOString().split("T")[0], // tanggal hari ini
+    }));
+
+    // simpan tiket ke localStorage
+    localStorage.setItem("tickets", JSON.stringify([...existingTickets, ...newTickets]));
+
+    // hapus item yang sudah dibayar dari cart
+    const remainingCart = cart.filter((item) => !selectedItems.includes(item.id));
+    setCart(remainingCart);
+    localStorage.setItem("cart", JSON.stringify(remainingCart));
+
+    alert("Pembayaran berhasil! Tiket sudah ditambahkan ke riwayat.");
+
+    // redirect ke halaman tiket
+    navigate("/tiket-saya");
+  };
 
   return (
-    <div className="container mx-auto px-4 py-10 min-h-[70vh]">
-      <h1 className="text-3xl font-bold mb-6 text-center text-cyan-600">
-        Keranjang Pesanan
-      </h1>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-center gap-2 mb-8">
+        <ShoppingCart className="text-cyan-600 w-7 h-7" />
+        <h1 className="text-2xl font-bold text-cyan-700">Keranjang Saya</h1>
+      </div>
 
+      <div className="grid md:grid-cols-3 gap-8">
+        {/* Daftar item */}
+        <div className="md:col-span-2 flex flex-col gap-6">
+          {cart.length === 0 ? (
+            <p className="text-center text-gray-600">
+              Keranjang masih kosong. Silakan pilih tiket terlebih dahulu.
+            </p>
+          ) : (
+              cart.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white border rounded-lg p-5 shadow flex justify-between items-start gap-4"
+                >
+                  {/* Checkbox + Poster */}
+                  <div className="flex gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.includes(item.id)}
+                      onChange={() => handleCheckbox(item.id)}
+                      className="mt-2 w-5 h-5"
+                    />
+                    <img
+                    src={
+                      item.poster?.startsWith("http")
+                        ? item.poster
+                        : `https://image.tmdb.org/t/p/w500${item.poster}`
+                    }
+                    alt={item.title}
+                    className="w-20 h-28 object-cover rounded-md"
+                  />
+                </div>
 
-      {selectedSeats.length === 0 ? (
-        <div className="flex justify-center items-center h-[50vh]">
-          <p className="text-center text-gray-600 text-lg font-medium">
-            Anda belum melakukan pemesanan
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="flex items-center gap-4 p-4 bg-cyan-600 rounded-xl shadow-md mb-6 text-white">
-            <img
-              src={order.poster}
-              alt={order.title}
-              className="w-24 h-32 object-cover rounded-lg"
-            />
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold">{order.title}</h2>
-              <p>{order.cinema}</p>
-              <p>Jam: {order.time}</p>
-              <p>
-                Harga per tiket: Rp{order.price.toLocaleString()}
-              </p>
-              <p className="font-bold">
-                Total: Rp{total.toLocaleString()}
-              </p>
-            </div>
-            <button className="p-2 text-red-300 hover:text-red-500">
-              <Trash2 className="w-6 h-6" />
-            </button>
-          </div>
-
-          <div className="bg-gray-100 p-6 rounded-xl shadow-md text-center">
-            <h2 className="text-xl font-bold mb-4">Pilih Kursi</h2>
-
-            <div className="bg-gray-300 h-6 mb-6 rounded-lg">LAYAR</div>
-
-            <div className="inline-block space-y-3">
-              {rows.map((row) => (
-                <div key={row} className="flex justify-center gap-2">
-                  {cols.map((col) => {
-                    const seat = `${row}${col}`;
-                    const isOccupied = occupiedSeats.includes(seat);
-                    const isSelected = selectedSeats.includes(seat);
-
-                    return (
-                      <button
+                {/* Info Film */}
+                <div className="flex-1">
+                  <h2 className="text-lg font-semibold">{item.title}</h2>
+                  <div className="flex items-center text-sm text-gray-600 gap-6 mt-2">
+                    <span className="flex items-center gap-1">
+                      <Film className="w-4 h-4" /> {item.cinema}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock3 className="w-4 h-4" /> {item.time}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm">
+                    Kursi:{" "}
+                    {item.seats.map((seat) => (
+                      <span
                         key={seat}
-                        onClick={() => toggleSeat(seat)}
-                        disabled={isOccupied}
-                        className={`w-10 h-10 rounded-lg text-sm font-semibold
-                          ${
-                            isOccupied
-                              ? "bg-red-500 text-white cursor-not-allowed"
-                              : isSelected
-                              ? "bg-green-500 text-white"
-                              : "bg-gray-200 hover:bg-cyan-400 hover:text-white"
-                          }`}
+                        className="inline-block bg-gray-200 px-2 py-1 rounded-md mr-2 text-xs"
                       >
                         {seat}
-                      </button>
-                    );
-                  })}
+                      </span>
+                    ))}
+                  </p>
+                  <p className="mt-2 text-gray-700 font-medium">
+                    {item.seats.length} tiket × Rp{" "}
+                    {(item.price ?? 0).toLocaleString("id-ID")}
+                  </p>
+                  <p className="font-bold text-lg text-cyan-700">
+                    Rp {(item.total ?? 0).toLocaleString("id-ID")}
+                  </p>
                 </div>
-              ))}
+
+                {/* Icon Aksi */}
+                <div className="flex gap-4 items-start">
+                  <button
+                    onClick={() => handleEdit(item)}
+                    className="text-gray-500 hover:text-blue-600"
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleRemove(item.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Rincian Pesanan */}
+        {cart.length > 0 && (
+          <div className="bg-white border rounded-lg p-5 shadow h-fit sticky top-20">
+            <h2 className="text-lg font-semibold mb-4">Rincian Pesanan</h2>
+
+            <div className="text-sm text-gray-700 flex flex-col gap-2">
+              {selectedCartItems.length === 0 ? (
+                <p className="text-gray-500">Belum ada tiket dipilih.</p>
+              ) : (
+                selectedCartItems.map((item) => (
+                  <div key={item.id} className="flex justify-between">
+                    <span>
+                      {item.seats.length} tiket - {item.title}
+                    </span>
+                    <span>Rp {(item.total ?? 0).toLocaleString("id-ID")}</span>
+                  </div>
+                ))
+              )}
             </div>
 
-            <div className="mt-6 p-4 bg-white rounded-lg shadow flex justify-between items-center">
-              <p className="font-medium">
-                Kursi dipilih: {selectedSeats.length > 0 ? selectedSeats.join(", ") : "-"}
-              </p>
-              <p className="font-bold text-cyan-600">
-                Total: Rp{total.toLocaleString()}
-              </p>
+            <hr className="my-3" />
+            <div className="flex justify-between font-bold text-lg text-cyan-700">
+              <span>Total</span>
+              <span>Rp {totalAmount.toLocaleString("id-ID")}</span>
             </div>
+
+            {/* Label Metode Pembayaran */}
+            <p className="mt-5 mb-2 text-sm font-semibold text-gray-700">
+              Metode Pembayaran
+            </p>
+
+            {/* Dropdown Pembayaran */}
+            <div>
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="w-full flex justify-between items-center border rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-50"
+              >
+                {selectedPayment ? (
+                  <span className="flex items-center gap-2">
+                    <img
+                      src={
+                        paymentOptions
+                          .flatMap((cat) => cat.options)
+                          .find((opt) => opt.name === selectedPayment)?.icon
+                      }
+                      alt={selectedPayment}
+                      className="w-5 h-5"
+                    />
+                    {selectedPayment}
+                  </span>
+                ) : (
+                  <span>Pilih Metode Pembayaran</span>
+                )}
+                <ChevronDown className="w-5 h-5" />
+              </button>
+
+              {showDropdown && (
+                <div className="mt-2 border rounded-lg bg-white shadow p-3 space-y-3">
+                  {paymentOptions.map((group) => (
+                    <div key={group.category}>
+                      <p className="text-sm font-semibold text-gray-600 mb-2">
+                        {group.category}
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {group.options.map((opt) => (
+                          <button
+                            key={opt.name}
+                            onClick={() => {
+                              setSelectedPayment(opt.name);
+                              setShowDropdown(false);
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-md w-full text-left"
+                          >
+                            <img
+                              src={opt.icon}
+                              alt={opt.name}
+                              className="w-5 h-5"
+                            />
+                            {opt.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Tombol Bayar */}
+            <button
+              onClick={handlePayment}
+              disabled={selectedCartItems.length === 0 || !selectedPayment}
+              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${selectedCartItems.length > 0 && selectedPayment
+                ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 cursor-pointer"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+            >
+              Bayar Sekarang
+            </button>
 
             <button
-              disabled={selectedSeats.length === 0}
-              className="mt-4 w-full py-3 bg-cyan-600 text-white font-semibold rounded-xl shadow hover:bg-cyan-700 transition disabled:opacity-50"
+              onClick={() => navigate("/film")}
+              className="w-full mt-3 px-4 py-3 rounded-lg border text-gray-600 hover:bg-gray-100"
             >
-              Lanjutkan ke Pembayaran
+              Lanjut Belanja
             </button>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };

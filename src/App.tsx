@@ -10,6 +10,7 @@ import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Tiket from "./pages/Tiket"; // ✅ import halaman Tiket
 
 const App = () => {
   const location = useLocation();
@@ -22,9 +23,8 @@ const App = () => {
       {!hideLayout && <Navbar />}
 
       <main
-        className={`flex-grow ${
-          hideLayout ? "bg-gradient-to-r from-cyan-500 to-blue-600" : "bg-white"
-        }`}
+        className={`flex-grow ${hideLayout ? "bg-gradient-to-r from-cyan-500 to-blue-600" : "bg-white"
+          }`}
       >
         {hideLayout && (
           <button
@@ -45,6 +45,9 @@ const App = () => {
           <Route path="/film/:id" element={<Film />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout/:movieId" element={<Checkout />} />
+
+          {/* ✅ Tambahkan route Tiket */}
+          <Route path="/tiket" element={<Tiket />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

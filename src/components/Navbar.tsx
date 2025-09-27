@@ -1,4 +1,4 @@
-import { ShoppingCart, User } from "lucide-react";
+import { ShoppingCart, User, Ticket } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
@@ -24,10 +24,9 @@ export default function Navbar() {
             to={item.path}
             className={({ isActive }) =>
               `relative px-4 py-2 rounded-lg font-medium transition-all duration-300
-              ${
-                isActive
-                  ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white"
+              ${isActive
+                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
+                : "text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white"
               }`
             }
           >
@@ -76,13 +75,19 @@ export default function Navbar() {
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border">
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border">
                   <Link
                     to="/profile"
                     className="block px-4 py-2 hover:bg-gray-100 text-sm"
                   >
                     Profil Saya
                   </Link>
+                    <Link
+                      to="/tiket"
+                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-sm"
+                    >
+                      <Ticket className="w-4 h-4" /> Tiket Saya
+                    </Link>
                   <button
                     onClick={logout}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-red-600"

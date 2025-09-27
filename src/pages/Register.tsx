@@ -53,7 +53,7 @@ export default function Register() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nama lengkap Anda"
+              placeholder="Nama Anda"
               className="w-full px-4 py-2 border rounded-lg text-gray-700 focus:ring-2 focus:ring-sky-400 focus:outline-none"
               required
             />

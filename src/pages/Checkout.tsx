@@ -13,19 +13,29 @@ interface Movie {
   vote_average: number;
 }
 
+interface Credits {
+  crew: { job: string; name: string }[];
+  cast: { name: string }[];
+}
+
+const cinemaPrices: Record<string, number> = {
+  "CGV Mall Kota": 50000,
+  "XXI Plaza Central": 60000,
+  "Cinepolis Grand Square": 55000,
+};
+
 const Checkout = () => {
   const { movieId } = useParams<{ movieId: string }>();
   const [movie, setMovie] = useState<Movie | null>(null);
+  const [credits, setCredits] = useState<Credits | null>(null);
+  const [selectedCinema, setSelectedCinema] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [occupiedSeats] = useState<string[]>(["A2", "A3", "C7", "D8", "F5"]);
   const navigate = useNavigate();
 
   const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
   const BASE_URL = "https://api.themoviedb.org/3";
-
-  const TICKET_PRICE = 50000;
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -33,15 +43,42 @@ const Checkout = () => {
         `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&language=id-ID`
       );
       const data = await res.json();
-      setMovie(data);
+
+      // fallback ke en-US jika overview kosong
+      if (!data.overview || data.overview.trim() === "") {
+        const resEn = await fetch(
+          `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&language=en-US`
+        );
+        const dataEn = await resEn.json();
+        setMovie(dataEn);
+      } else {
+        setMovie(data);
+      }
+
+      const creditsRes = await fetch(
+        `${BASE_URL}/movie/${movieId}/credits?api_key=${API_KEY}&language=id-ID`
+      );
+      const creditsData = await creditsRes.json();
+      setCredits(creditsData);
+
+      // Prefill jika edit
+      const editItem = localStorage.getItem("editItem");
+      if (editItem) {
+        const parsed = JSON.parse(editItem);
+        setSelectedCinema(parsed.cinema);
+        setSelectedTime(parsed.time);
+        setSelectedSeats(parsed.seats);
+        localStorage.removeItem("editItem");
+      }
     };
+
     fetchMovie();
   }, [movieId]);
 
   if (!movie) return <p className="text-center py-10">Loading...</p>;
 
   const showTimes = ["10:00", "13:30", "16:00", "19:00", "21:30"];
-  const paymentMethods = ["Dana", "GoPay", "OVO", "Bank Transfer"];
+  const cinemas = Object.keys(cinemaPrices);
 
   const rows = ["A", "B", "C", "D", "E", "F"];
   const cols = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -55,25 +92,23 @@ const Checkout = () => {
     }
   };
 
-  const totalPrice = selectedSeats.length * TICKET_PRICE;
+  const ticketPrice = selectedCinema ? cinemaPrices[selectedCinema] : 0;
+  const totalPrice = selectedSeats.length * ticketPrice;
 
   const handleCheckout = () => {
-    if (
-      !movie ||
-      !selectedTime ||
-      selectedSeats.length === 0 ||
-      !selectedPayment
-    )
+    if (!movie || !selectedCinema || !selectedTime || selectedSeats.length === 0)
       return;
 
     const order = {
+      id: Date.now(),
       movieId: movie.id,
       title: movie.title,
       poster: movie.poster_path,
+      cinema: selectedCinema,
       time: selectedTime,
       seats: selectedSeats,
+      price: ticketPrice,
       total: totalPrice,
-      payment: selectedPayment,
     };
 
     const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -93,6 +128,7 @@ const Checkout = () => {
       </button>
 
       <div className="grid md:grid-cols-3 gap-8">
+        {/* Kiri: Poster */}
         <div className="flex flex-col items-center gap-6">
           <div className="flex flex-col items-center">
             <img
@@ -104,31 +140,9 @@ const Checkout = () => {
               ⭐ {movie.vote_average.toFixed(1)}
             </div>
           </div>
-
-          <div className="bg-white border rounded-lg p-4 shadow w-full">
-            <h2 className="font-semibold text-lg mb-3 text-center">
-              Pilih Metode Pembayaran
-            </h2>
-            <select
-              value={selectedPayment ?? ""}
-              onChange={(e) => setSelectedPayment(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-              <option value="">-- Pilih Metode --</option>
-              {paymentMethods.map((method) => (
-                <option key={method} value={method}>
-                  {method}
-                </option>
-              ))}
-            </select>
-            {selectedPayment && (
-              <p className="mt-3 text-sm text-cyan-600 text-center">
-                Pembayaran: <strong>{selectedPayment}</strong>
-              </p>
-            )}
-          </div>
         </div>
 
+        {/* Kanan: Detail & Pilihan */}
         <div className="md:col-span-2 flex flex-col gap-6">
           <h1 className="text-3xl font-bold">{movie.title}</h1>
 
@@ -143,22 +157,32 @@ const Checkout = () => {
             ))}
           </div>
 
+          {/* Sinopsis */}
           <div className="bg-white border rounded-lg p-4 shadow">
-            <h2 className="font-semibold text-lg mb-2">Synopsis</h2>
-            <p className="text-gray-700 leading-relaxed">{movie.overview}</p>
+            <h2 className="font-semibold text-lg mb-2">Sinopsis</h2>
+            <p className="text-gray-700 leading-relaxed">
+              {movie.overview && movie.overview.trim() !== ""
+                ? movie.overview
+                : "Sinopsis tidak tersedia."}
+            </p>
           </div>
 
+          {/* Informasi Film */}
           <div className="bg-white border rounded-lg p-4 shadow">
             <h2 className="font-semibold text-lg mb-3">Informasi Film</h2>
             <div className="grid md:grid-cols-2 gap-4 text-gray-700 text-sm">
               <p>
-                <strong>Director:</strong> (Tidak tersedia di API)
+                <strong>Sutradara:</strong>{" "}
+                {credits?.crew.find((c) => c.job === "Director")?.name ||
+                  "Tidak tersedia"}
               </p>
               <p>
-                <strong>Language:</strong> {movie.original_language}
+                <strong>Bahasa:</strong> {movie.original_language}
               </p>
               <p>
-                <strong>Starring:</strong> (Cast perlu API lain TMDB)
+                <strong>Pemeran:</strong>{" "}
+                {credits?.cast.slice(0, 3).map((c) => c.name).join(", ") ||
+                  "Tidak tersedia"}
               </p>
               <p>
                 <strong>Subtitle:</strong> Bahasa Indonesia, English
@@ -168,14 +192,41 @@ const Checkout = () => {
                 {movie.genres.map((g) => g.name).join(", ")}
               </p>
               <p>
-                <strong>Duration:</strong> {movie.runtime} min
+                <strong>Durasi:</strong> {movie.runtime} menit
               </p>
               <p>
-                <strong>Release Date:</strong> {movie.release_date}
+                <strong>Tanggal Rilis:</strong> {movie.release_date}
               </p>
             </div>
           </div>
 
+          {/* Pilih Bioskop */}
+          <div className="bg-white border rounded-lg p-4 shadow">
+            <h2 className="font-semibold text-lg mb-3">Pilih Bioskop</h2>
+            <select
+              value={selectedCinema ?? ""}
+              onChange={(e) => setSelectedCinema(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              <option value="">-- Pilih Bioskop --</option>
+              {cinemas.map((cinema) => (
+                <option key={cinema} value={cinema}>
+                  {cinema}
+                </option>
+              ))}
+            </select>
+            {selectedCinema && (
+              <p className="mt-3 text-sm text-cyan-600">
+                Bioskop: <strong>{selectedCinema}</strong> <br />
+                Harga per tiket:{" "}
+                <strong>
+                  Rp {cinemaPrices[selectedCinema].toLocaleString("id-ID")}
+                </strong>
+              </p>
+            )}
+          </div>
+
+          {/* Pilih Jam Tayang */}
           <div className="bg-white border rounded-lg p-4 shadow">
             <h2 className="font-semibold text-lg mb-3">Pilih Jam Tayang</h2>
             <div className="flex flex-wrap gap-3">
@@ -183,11 +234,10 @@ const Checkout = () => {
                 <button
                   key={time}
                   onClick={() => setSelectedTime(time)}
-                  className={`px-4 py-2 rounded-lg border transition ${
-                    selectedTime === time
+                  className={`px-4 py-2 rounded-lg border transition ${selectedTime === time
                       ? "bg-cyan-600 text-white border-cyan-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   {time}
                 </button>
@@ -200,6 +250,7 @@ const Checkout = () => {
             )}
           </div>
 
+          {/* Pilih Kursi */}
           <div className="bg-white border rounded-lg p-4 shadow text-center">
             <h2 className="font-semibold text-lg mb-3">Pilih Kursi</h2>
             <div className="bg-gray-300 text-gray-800 py-2 rounded mb-4">
@@ -221,13 +272,12 @@ const Checkout = () => {
                         key={seat}
                         onClick={() => toggleSeat(seat)}
                         disabled={isOccupied}
-                        className={`w-10 h-10 rounded-md border text-sm font-medium ${
-                          isOccupied
+                        className={`w-10 h-10 rounded-md border text-sm font-medium ${isOccupied
                             ? "bg-green-500 text-white cursor-not-allowed"
                             : isSelected
                             ? "bg-cyan-600 text-white"
                             : "bg-gray-200 hover:bg-gray-300"
-                        }`}
+                          }`}
                       >
                         {col}
                       </button>
@@ -238,6 +288,7 @@ const Checkout = () => {
               ))}
             </div>
 
+            {/* Legend kursi */}
             <div className="flex justify-center gap-4 mt-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-gray-200 border rounded"></div>{" "}
@@ -256,22 +307,19 @@ const Checkout = () => {
             </div>
           </div>
 
+          {/* Tombol checkout */}
           <div className="flex gap-4">
             <button
               onClick={handleCheckout}
               disabled={
-                !selectedTime || selectedSeats.length === 0 || !selectedPayment
+                !selectedCinema || !selectedTime || selectedSeats.length === 0
               }
-              className={`flex-1 px-6 py-3 rounded-lg shadow transition ${
-                selectedTime && selectedSeats.length > 0 && selectedPayment
+              className={`flex-1 px-6 py-3 rounded-lg shadow transition ${selectedCinema && selectedTime && selectedSeats.length > 0
                   ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+                }`}
             >
-              Pesan Tiket Sekarang
-            </button>
-            <button className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-100">
-              Tambah ke Favorit
+              Masukkan Keranjang
             </button>
           </div>
         </div>
