@@ -1,16 +1,18 @@
 import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { loginApi, registerApi } from "../Services/api";
 
 type User = {
+  id: number;
+  username: string;
   name: string;
-  email: string;
 };
 
 type AuthContextType = {
   user: User | null;
-  login: (email: string, password: string) => void;
-  register: (name: string, email: string, password: string) => void;
+  login: (username: string, password: string) => Promise<void>;
+  register: (name: string, username: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -20,14 +22,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
-  const login = (email: string) => {
-    setUser({ name: "User Demo", email });
-    navigate("/");
+  const login = async (username: string, password: string) => {
+    try {
+      const res = await loginApi(username, password);
+      setUser(res.user);
+      navigate("/");
+    } catch (error: any) {
+      console.error("❌ Login gagal:", error);
+      alert(error.message || "Login gagal, coba lagi");
+    }
   };
 
-  const register = (name: string, email: string, password: string) => {
-    console.log("Registered:", { name, email, password });
-    navigate("/login");
+  const register = async (name: string, username: string, password: string) => {
+    try {
+      const res = await registerApi(name, username, password);
+      console.log("✅ Registered:", res);
+      alert("Registrasi sukses, silakan login");
+      navigate("/login");
+    } catch (error: any) {
+      console.error("❌ Register gagal:", error);
+      alert(error.message || "Register gagal, coba lagi");
+    }
   };
 
   const logout = () => {

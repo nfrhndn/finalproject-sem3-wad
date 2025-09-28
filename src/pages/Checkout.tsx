@@ -306,7 +306,6 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Tombol checkout */}
           <div className="flex gap-4">
             <button
               onClick={handleCheckout}

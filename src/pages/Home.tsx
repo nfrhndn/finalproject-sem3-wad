@@ -23,6 +23,7 @@ const Home = () => {
     const loadMovies = async () => {
       try {
         const data = await fetchPopularMovies();
+        console.log("Popular movies dat:", data);
         setMovies(data.results.slice(0, 10));
       } catch (error) {
         console.error("Gagal fetch film:", error);
@@ -34,6 +35,7 @@ const Home = () => {
   const handleTrailer = async (movieId: number) => {
     try {
       const data = await fetchMovieDetail(movieId);
+      console.log("Movie detail:", data);
       if (data.videos && data.videos.results) {
         const youtubeVideo = data.videos.results.find(
           (vid: any) => vid.site === "YouTube" && vid.type === "Trailer"

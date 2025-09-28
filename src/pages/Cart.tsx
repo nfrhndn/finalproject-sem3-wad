@@ -7,6 +7,7 @@ import {
   Film,
   Clock3,
   ChevronDown,
+  icons,
 } from "lucide-react";
 
 interface CartItem {
