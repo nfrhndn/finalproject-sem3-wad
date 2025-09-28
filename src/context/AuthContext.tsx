@@ -5,14 +5,14 @@ import { loginApi, registerApi } from "../Services/api";
 
 type User = {
   id: number;
-  username: string;
+  email: string;
   name: string;
 };
 
 type AuthContextType = {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
-  register: (name: string, username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -22,9 +22,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      const res = await loginApi(username, password);
+      const res = await loginApi(email, password);
       setUser(res.user);
       navigate("/");
     } catch (error: any) {
@@ -33,9 +33,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (name: string, username: string, password: string) => {
+  const register = async (name: string, email: string, password: string) => {
     try {
-      const res = await registerApi(name, username, password);
+      const res = await registerApi(name, email, password);
       console.log("✅ Registered:", res);
       alert("Registrasi sukses, silakan login");
       navigate("/login");

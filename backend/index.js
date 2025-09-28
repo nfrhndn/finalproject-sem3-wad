@@ -19,8 +19,8 @@ app.use(
 app.use(express.json());
 
 let users = [
-  { id: 1, username: "admin", password: "123456", name: "Admin" },
-  { id: 2, username: "user", password: "password", name: "Regular User" },
+  { id: 1, email: "budi@gmail.com", password: "123456", name: "Budi Santoso" },
+  { id: 2, email: "ahmad@gmail.com", password: "ahmadmamad", name: "Ahmad Mamad" },
 ];
 
 if (!API_KEY) {

@@ -7,7 +7,6 @@ import {
   Film,
   Clock3,
   ChevronDown,
-  icons,
 } from "lucide-react";
 
 interface CartItem {
@@ -74,7 +73,7 @@ const Cart = () => {
         { name: "Mandiri", icon: "/icons/mandiri.png" },
         { name: "BNI", icon: "/icons/bni.png" },
         { name: "Permata Bank", icon: "/icons/permatabank.png" },
-        { name: "Bank BRI", icon: "/icons/bri.png" },
+        { name: "Bank BRI", icon: "/src/icons/bri.png" },
       ],
     },
     {
