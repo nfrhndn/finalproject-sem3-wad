@@ -14,7 +14,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="flex justify-between items-center px-8 py-4 shadow-md bg-white">
+    <nav className="sticky top-0 z-50 flex justify-between items-center px-8 py-4 shadow-md bg-white">
       <div className="text-2xl font-bold text-cyan-600">CinemaPlus</div>
 
       <div className="flex space-x-6">
