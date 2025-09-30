@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginApi, registerApi } from "../Services/api";
@@ -22,10 +22,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   const login = async (email: string, password: string) => {
     try {
       const res = await loginApi(email, password);
+
       setUser(res.user);
+      localStorage.setItem("user", JSON.stringify(res.user));
+
       navigate("/");
     } catch (error: any) {
       console.error("❌ Login gagal:", error);
@@ -47,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem("user");
     navigate("/");
   };
 

@@ -5,6 +5,7 @@ import Hero from "../components/Hero";
 import CinemaCard from "../components/CinemaCard";
 import MoviesSlider from "../components/MoviesSlider";
 import { fetchPopularMovies, fetchMovieDetail } from "../Services/api";
+import TrailerModal from "../components/TrailerModal";
 
 interface Movie {
   id: number;
@@ -23,7 +24,7 @@ const Home = () => {
     const loadMovies = async () => {
       try {
         const data = await fetchPopularMovies();
-        console.log("Popular movies dat:", data);
+        console.log("Popular movies data:", data);
         setMovies(data.results.slice(0, 10));
       } catch (error) {
         console.error("Gagal fetch film:", error);
@@ -72,25 +73,12 @@ const Home = () => {
         onSeeAll={() => navigate("/film")}
       />
 
+
       {trailerKey && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-black rounded-lg overflow-hidden w-[80%] max-w-3xl">
-            <div className="flex justify-end p-2">
-              <button
-                className="text-white text-xl"
-                onClick={() => setTrailerKey(null)}
-              >
-                ✕
-              </button>
-            </div>
-            <iframe
-              className="w-full h-[500px]"
-              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
-              title="Trailer"
-              allowFullScreen
-            ></iframe>
-          </div>
-        </div>
+        <TrailerModal
+          trailerKey={trailerKey}
+          onClose={() => setTrailerKey(null)}
+        />
       )}
 
       <section className="container mx-auto px-4 py-10">
