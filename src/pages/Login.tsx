@@ -7,7 +7,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null); // ✅ pesan error
+  const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,7 +20,7 @@ export default function Login() {
 
     try {
       await login(email, password);
-      setError(null); // reset error kalau sukses
+      setError(null);
     } catch (err: any) {
       setError(err.message || "Login gagal, coba lagi.");
     }

@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
-  // ✅ Cek user dari localStorage + validasi ke backend
   useEffect(() => {
     const saved = localStorage.getItem("user");
     if (saved) {
@@ -31,10 +30,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           const res = await fetch("http://localhost:5000/");
           if (!res.ok) throw new Error("Backend tidak bisa diakses");
-          setUser(parsed); // valid → tetap login
+          setUser(parsed); 
         } catch (err) {
           console.error("❌ Auto logout karena backend mati atau invalid user");
-          logout(); // invalid → paksa logout
+          logout(); 
         }
       };
 
@@ -55,7 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const register = async (name: string, email: string, password: string) => {
     await registerApi(name, email, password);
-    navigate("/login"); // setelah daftar → ke login
+    navigate("/login"); 
   };
 
   const logout = () => {
