@@ -74,29 +74,29 @@ const Film = () => {
   return (
     <div className="container mx-auto px-4 py-10">
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
-        {/* Tombol kategori */}
         <div className="flex gap-4">
           <button
             onClick={() => setCategory("now_playing")}
-            className={`flex items-center gap-2 border-2 px-4 py-1 rounded-full transition ${category === "now_playing"
+            className={`flex items-center gap-2 border-2 px-4 py-1 rounded-full transition ${
+              category === "now_playing"
                 ? "bg-cyan-600 text-white border-cyan-600"
                 : "border-cyan-600 text-cyan-600 hover:bg-cyan-600 hover:text-white"
-              }`}
+            }`}
           >
             Sedang Tayang
           </button>
           <button
             onClick={() => setCategory("upcoming")}
-            className={`flex items-center gap-2 border-2 px-4 py-1 rounded-full transition ${category === "upcoming"
+            className={`flex items-center gap-2 border-2 px-4 py-1 rounded-full transition ${
+              category === "upcoming"
                 ? "bg-cyan-600 text-white border-cyan-600"
                 : "border-cyan-600 text-cyan-600 hover:bg-cyan-600 hover:text-white"
-              }`}
+            }`}
           >
             Akan Tayang
           </button>
         </div>
 
-        {/* Search */}
         <div className="relative flex-1 max-w-lg md:ml-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
           <input
@@ -109,7 +109,6 @@ const Film = () => {
         </div>
       </div>
 
-      {/* List film */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {filteredMovies.map((movie) => (
           <MovieCard
@@ -124,7 +123,6 @@ const Film = () => {
         ))}
       </div>
 
-      {/* Modal Trailer */}
       {trailerKey && (
         <TrailerModal
           trailerKey={trailerKey}

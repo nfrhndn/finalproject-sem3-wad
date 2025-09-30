@@ -133,7 +133,9 @@ const Checkout = () => {
       !selectedTime ||
       selectedSeats.length === 0
     ) {
-      alert("Lengkapi pilihan bioskop, tanggal, jam, dan kursi terlebih dahulu.");
+      alert(
+        "Lengkapi pilihan bioskop, tanggal, jam, dan kursi terlebih dahulu."
+      );
       return;
     }
 
@@ -178,7 +180,6 @@ const Checkout = () => {
       </button>
 
       <div className="grid md:grid-cols-3 gap-8">
-        {/* Kiri */}
         <div className="flex flex-col items-center gap-6">
           <div className="flex flex-col items-center">
             <img
@@ -213,8 +214,10 @@ const Checkout = () => {
               </p>
               <p>
                 <strong>Pemeran:</strong>{" "}
-                {credits?.cast.slice(0, 3).map((c) => c.name).join(", ") ||
-                  "Tidak tersedia"}
+                {credits?.cast
+                  .slice(0, 3)
+                  .map((c) => c.name)
+                  .join(", ") || "Tidak tersedia"}
               </p>
               <p>
                 <strong>Subtitle:</strong> Bahasa Indonesia, English
@@ -233,7 +236,6 @@ const Checkout = () => {
           </div>
         </div>
 
-        {/* Kanan */}
         <div className="md:col-span-2 flex flex-col gap-6">
           <h1 className="text-3xl font-bold">{movie.title}</h1>
 
@@ -306,10 +308,11 @@ const Checkout = () => {
                   <button
                     key={t}
                     onClick={() => setSelectedTime(t)}
-                    className={`px-4 py-2 rounded-lg border transition ${selectedTime === t
-                      ? "bg-cyan-600 text-white border-cyan-600"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                    className={`px-4 py-2 rounded-lg border transition ${
+                      selectedTime === t
+                        ? "bg-cyan-600 text-white border-cyan-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
                     {t}
                   </button>
@@ -323,20 +326,21 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Pilih kursi */}
           <div className="bg-white border rounded-lg p-4 shadow text-center">
             <h2 className="font-semibold text-lg mb-3">Pilih Kursi</h2>
             <div className="bg-gray-300 text-gray-800 py-2 rounded mb-4">
               Layar
             </div>
 
-            {/* Wrapper supaya responsif */}
             <div className="overflow-x-auto">
               <div className="flex flex-col gap-3 items-center min-w-max px-2">
                 {rows.map((row) => (
                   <div key={row} className="inline-flex gap-2 items-center">
                     {cols.map((col) => {
-                      if (col === 7) return <div key={`gap-${row}`} className="w-4 sm:w-6" />;
+                      if (col === 7)
+                        return (
+                          <div key={`gap-${row}`} className="w-4 sm:w-6" />
+                        );
                       const seat = `${row}${col}`;
                       const isOccupied = occupiedSeats.includes(seat);
                       const isSelected = selectedSeats.includes(seat);
@@ -347,12 +351,13 @@ const Checkout = () => {
                           onClick={() => toggleSeat(seat)}
                           disabled={isOccupied}
                           className={`w-8 h-8 sm:w-10 sm:h-10 rounded-md border font-medium text-xs sm:text-sm transition 
-                  ${isOccupied
-                              ? "bg-green-500 text-white cursor-not-allowed"
-                              : isSelected
-                                ? "bg-cyan-600 text-white"
-                                : "bg-gray-200 hover:bg-gray-300"
-                            }`}
+                  ${
+                    isOccupied
+                      ? "bg-green-500 text-white cursor-not-allowed"
+                      : isSelected
+                      ? "bg-cyan-600 text-white"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  }`}
                         >
                           {col}
                         </button>
@@ -364,10 +369,10 @@ const Checkout = () => {
               </div>
             </div>
 
-            {/* Legend kursi */}
             <div className="flex justify-center gap-4 mt-4 text-xs sm:text-sm flex-wrap">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-gray-200 border rounded"></div> Tersedia
+                <div className="w-5 h-5 bg-gray-200 border rounded"></div>{" "}
+                Tersedia
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-cyan-600 rounded"></div> Dipilih
@@ -382,7 +387,6 @@ const Checkout = () => {
             </div>
           </div>
 
-
           <div className="flex gap-4">
             <button
               onClick={handleCheckout}
@@ -392,13 +396,14 @@ const Checkout = () => {
                 !selectedTime ||
                 selectedSeats.length === 0
               }
-              className={`flex-1 px-6 py-3 rounded-lg shadow transition ${selectedCinema &&
+              className={`flex-1 px-6 py-3 rounded-lg shadow transition ${
+                selectedCinema &&
                 selectedDate &&
                 selectedTime &&
                 selectedSeats.length > 0
                   ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
+              }`}
             >
               {isEdit ? "Simpan Perubahan" : "Masukkan Keranjang"}
             </button>

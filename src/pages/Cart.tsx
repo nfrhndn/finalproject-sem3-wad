@@ -36,7 +36,7 @@ const Cart = () => {
       const storedCart: CartItem[] = JSON.parse(
         localStorage.getItem("cart") || "[]"
       );
-      setCart(storedCart.reverse()); // terbaru di atas
+      setCart(storedCart.reverse());
     } catch (error) {
       console.error("Gagal parse cart:", error);
       setCart([]);
@@ -134,14 +134,12 @@ const Cart = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
       <div className="flex items-center justify-center gap-2 mb-8">
         <ShoppingCart className="text-cyan-600 w-7 h-7" />
         <h1 className="text-2xl font-bold text-cyan-700">Keranjang Saya</h1>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
-        {/* Daftar item keranjang */}
         <div className="md:col-span-2 flex flex-col gap-6">
           {cart.length === 0 ? (
             <p className="text-center text-gray-600">
@@ -153,7 +151,6 @@ const Cart = () => {
                 key={item.id}
                 className="bg-white border rounded-lg p-5 shadow flex flex-col sm:flex-row gap-4"
               >
-                {/* Checkbox + Poster */}
                 <div className="flex gap-3 items-start">
                   <input
                     type="checkbox"
@@ -172,7 +169,6 @@ const Cart = () => {
                   />
                 </div>
 
-                {/* Detail film */}
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <h2 className="text-lg font-semibold">{item.title}</h2>
@@ -211,7 +207,6 @@ const Cart = () => {
                   </div>
                 </div>
 
-                {/* Tombol aksi sejajar kanan-kiri */}
                 <div className="flex gap-3 items-center">
                   <button
                     onClick={() => handleEdit(item)}
@@ -231,7 +226,6 @@ const Cart = () => {
           )}
         </div>
 
-        {/* Rincian pesanan */}
         {cart.length > 0 && (
           <div className="bg-white border rounded-lg p-5 shadow h-fit sticky top-20">
             <h2 className="text-lg font-semibold mb-4">Rincian Pesanan</h2>
@@ -262,7 +256,6 @@ const Cart = () => {
               <span>Rp {totalAmount.toLocaleString("id-ID")}</span>
             </div>
 
-            {/* Pembayaran */}
             <p className="mt-5 mb-2 text-sm font-semibold text-gray-700">
               Metode Pembayaran
             </p>
@@ -298,10 +291,11 @@ const Cart = () => {
                         {group.category}
                       </p>
                       <div
-                        className={`grid gap-3 ${group.options.length > 1
-                          ? "grid-cols-2"
-                          : "grid-cols-1"
-                          }`}
+                        className={`grid gap-3 ${
+                          group.options.length > 1
+                            ? "grid-cols-2"
+                            : "grid-cols-1"
+                        }`}
                       >
                         {group.options.map((opt) => (
                           <button
@@ -326,14 +320,14 @@ const Cart = () => {
               )}
             </div>
 
-            {/* Tombol */}
             <button
               onClick={handlePayment}
               disabled={selectedCartItems.length === 0 || !selectedPayment}
-              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${selectedCartItems.length > 0 && selectedPayment
+              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${
+                selectedCartItems.length > 0 && selectedPayment
                   ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 cursor-pointer"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
+              }`}
             >
               Bayar Sekarang
             </button>
