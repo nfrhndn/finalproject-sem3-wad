@@ -211,8 +211,8 @@ const Cart = () => {
                   </div>
                 </div>
 
-                {/* Tombol aksi */}
-                <div className="flex sm:flex-col gap-3 items-center sm:items-end">
+                {/* Tombol aksi sejajar kanan-kiri */}
+                <div className="flex gap-3 items-center">
                   <button
                     onClick={() => handleEdit(item)}
                     className="text-gray-500 hover:text-blue-600"
