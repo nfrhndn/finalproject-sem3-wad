@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginApi, registerApi } from "../Services/api";
 
@@ -18,47 +17,51 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
+  // ✅ Cek user dari localStorage + validasi ke backend
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const saved = localStorage.getItem("user");
+    if (saved) {
+      const parsed = JSON.parse(saved) as User;
+
+      const validateUser = async () => {
+        try {
+          const res = await fetch("http://localhost:5000/");
+          if (!res.ok) throw new Error("Backend tidak bisa diakses");
+          setUser(parsed); // valid → tetap login
+        } catch (err) {
+          console.error("❌ Auto logout karena backend mati atau invalid user");
+          logout(); // invalid → paksa logout
+        }
+      };
+
+      validateUser();
     }
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       const res = await loginApi(email, password);
-
       setUser(res.user);
       localStorage.setItem("user", JSON.stringify(res.user));
-
       navigate("/");
-    } catch (error: any) {
-      console.error("❌ Login gagal:", error);
-      alert(error.message || "Login gagal, coba lagi");
+    } catch (err) {
+      throw new Error("Email atau password salah, atau akun belum terdaftar.");
     }
   };
 
   const register = async (name: string, email: string, password: string) => {
-    try {
-      const res = await registerApi(name, email, password);
-      console.log("✅ Registered:", res);
-      alert("Registrasi sukses, silakan login");
-      navigate("/login");
-    } catch (error: any) {
-      console.error("❌ Register gagal:", error);
-      alert(error.message || "Register gagal, coba lagi");
-    }
+    await registerApi(name, email, password);
+    navigate("/login"); // setelah daftar → ke login
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    navigate("/");
+    navigate("/login");
   };
 
   return (
@@ -69,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  return context;
 };

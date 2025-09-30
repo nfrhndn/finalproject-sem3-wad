@@ -12,7 +12,7 @@ export default function Register() {
   const [confirm, setConfirm] = useState("");
   const { register } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name || !email || !password || !confirm) {
@@ -25,7 +25,12 @@ export default function Register() {
       return;
     }
 
-    register(name, email, password);
+    try {
+      await register(name, email, password);
+    } catch (err) {
+      console.error("Register gagal:", err);
+      alert("Gagal Mendaftar, Akun Sudah Terdaftar!");
+    }
   };
 
   return (
