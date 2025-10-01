@@ -22,40 +22,40 @@ const Film = () => {
   const [search, setSearch] = useState("");
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
 
-  const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-  const BASE_URL = "https://api.themoviedb.org/3";
+  const BASE_URL = "http://localhost:5000/api/movies";
 
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch(
-          `${BASE_URL}/movie/${category}?api_key=${API_KEY}&language=id-ID&page=1`
-        );
+        const res = await fetch(`${BASE_URL}/${category}`);
+        if (!res.ok) throw new Error("Gagal fetch film dari backend");
         const data = await res.json();
-        setMovies(data.results);
+        setMovies(data.results || []);
       } catch (error) {
-        console.error("Gagal fetch film:", error);
+        console.error("❌ Error fetch film:", error);
+        setMovies([]);
       }
     };
     fetchMovies();
-  }, [category, API_KEY]);
+  }, [category]);
 
   const handleTrailer = async (movieId: number) => {
     try {
-      const res = await fetch(
-        `${BASE_URL}/movie/${movieId}/videos?api_key=${API_KEY}&language=en-US`
-      );
+      const res = await fetch(`${BASE_URL}/${movieId}`);
+      if (!res.ok) throw new Error("Gagal fetch detail film dari backend");
       const data = await res.json();
-      const youtubeVideo = data.results.find(
+
+      const youtubeVideo = data.videos?.results.find(
         (vid: any) => vid.site === "YouTube" && vid.type === "Trailer"
       );
+
       if (youtubeVideo) {
         setTrailerKey(youtubeVideo.key);
       } else {
         alert("Trailer tidak tersedia.");
       }
     } catch (error) {
-      console.error("Gagal fetch trailer:", error);
+      console.error("❌ Gagal fetch trailer:", error);
     }
   };
 

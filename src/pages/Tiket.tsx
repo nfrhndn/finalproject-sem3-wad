@@ -14,19 +14,30 @@ interface TicketItem {
   bookingCode: string;
 }
 
-const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w200";
-
 const Tiket = () => {
   const [tickets, setTickets] = useState<TicketItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
-      setTickets(storedTickets);
-    } catch (error) {
-      console.error("Gagal load tiket:", error);
-      setTickets([]);
-    }
+    const fetchTickets = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/booking/tickets");
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.tickets)) {
+          setTickets(data.tickets);
+        } else {
+          setTickets([]);
+        }
+      } catch (error) {
+        console.error("Gagal load tiket:", error);
+        setTickets([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTickets();
   }, []);
 
   const getStatus = (date: string, time: string) => {
@@ -54,6 +65,10 @@ const Tiket = () => {
     });
   };
 
+  if (loading) {
+    return <p className="text-center text-gray-500">Loading tiket...</p>;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center gap-2 mb-6">
@@ -80,7 +95,7 @@ const Tiket = () => {
                   className="bg-white border rounded-lg p-5 shadow flex gap-4 items-start"
                 >
                   <img
-                    src={`${TMDB_BASE_URL}${item.poster}`}
+                    src={item.poster}
                     alt={item.title}
                     className="w-24 h-36 object-cover rounded-md"
                   />

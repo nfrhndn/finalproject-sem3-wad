@@ -32,22 +32,34 @@ const Cart = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    try {
-      const storedCart: CartItem[] = JSON.parse(
-        localStorage.getItem("cart") || "[]"
-      );
-      setCart(storedCart.reverse());
-    } catch (error) {
-      console.error("Gagal parse cart:", error);
-      setCart([]);
-    }
+    const fetchCart = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/booking");
+        const data = await res.json();
+        setCart((data.bookings || []).reverse());
+      } catch (error) {
+        console.error("Gagal fetch cart dari backend:", error);
+        const storedCart: CartItem[] = JSON.parse(
+          localStorage.getItem("cart") || "[]"
+        );
+        setCart(storedCart.reverse());
+      }
+    };
+
+    fetchCart();
   }, []);
 
-  const handleRemove = (id: number) => {
-    const updatedCart = cart.filter((item) => item.id !== id);
-    setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    setSelectedItems((prev) => prev.filter((i) => i !== id));
+  const handleRemove = async (id: number) => {
+    try {
+      await fetch(`http://localhost:5000/api/booking/${id}`, {
+        method: "DELETE",
+      });
+      const updatedCart = cart.filter((item) => item.id !== id);
+      setCart(updatedCart);
+      setSelectedItems((prev) => prev.filter((i) => i !== id));
+    } catch (error) {
+      console.error("Gagal hapus booking:", error);
+    }
   };
 
   const handleEdit = (item: CartItem) => {
@@ -100,36 +112,30 @@ const Cart = () => {
     },
   ];
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (selectedCartItems.length === 0 || !selectedPayment) return;
 
-    const existingTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
+    try {
+      const res = await fetch("http://localhost:5000/api/booking/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
 
-    const generateBookingCode = (prefix: string) =>
-      prefix.toUpperCase().slice(0, 3) +
-      Math.floor(100000 + Math.random() * 900000).toString();
+      const data = await res.json();
 
-    const newTickets = selectedCartItems.map((item) => ({
-      ...item,
-      bookingCode: generateBookingCode(item.title),
-      poster: item.poster?.startsWith("http")
-        ? item.poster
-        : `https://image.tmdb.org/t/p/w500${item.poster}`,
-    }));
+      if (data.success) {
+        setCart([]);
+        setSelectedItems([]);
+        localStorage.removeItem("cart");
 
-    localStorage.setItem(
-      "tickets",
-      JSON.stringify([...existingTickets, ...newTickets])
-    );
-
-    const remainingCart = cart.filter(
-      (item) => !selectedItems.includes(item.id)
-    );
-    setCart(remainingCart);
-    localStorage.setItem("cart", JSON.stringify(remainingCart));
-
-    alert("Pembayaran berhasil! Tiket sudah ditambahkan ke riwayat.");
-    navigate("/tiket");
+        alert("Pembayaran berhasil! Tiket sudah ditambahkan ke MyTicket");
+        navigate("/tiket");
+      } else {
+        alert("Checkout gagal: " + data.message);
+      }
+    } catch (error) {
+      console.error("Gagal checkout:", error);
+    }
   };
 
   return (
