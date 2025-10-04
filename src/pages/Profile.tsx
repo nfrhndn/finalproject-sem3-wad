@@ -26,7 +26,6 @@ const Profile = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // ✅ Load data dari localStorage kalau ada
   useEffect(() => {
     const savedProfile = localStorage.getItem("profileData");
     if (savedProfile) {
@@ -62,7 +61,6 @@ const Profile = () => {
     }
   };
 
-  // ✅ Simpan ke localStorage saat klik "Simpan"
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem("profileData", JSON.stringify(formData));
@@ -101,7 +99,7 @@ const Profile = () => {
         onSubmit={handleSave}
         className="space-y-6 bg-white p-6 rounded-xl shadow-lg"
       >
-        {/* Avatar */}
+
         <div className="flex justify-center">
           <div className="relative w-28 h-28">
             <img
@@ -135,7 +133,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Data Diri */}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -176,7 +174,6 @@ const Profile = () => {
               className="mt-1 block w-full border border-gray-300 rounded px-3 py-2 disabled:bg-gray-100"
             />
           </div>
-          {/* ✅ Jenis Kelamin */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Jenis Kelamin
@@ -208,7 +205,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Password */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700">

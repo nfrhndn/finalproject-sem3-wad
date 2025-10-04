@@ -166,7 +166,7 @@ const Checkout = () => {
       </button>
 
       <div className="grid md:grid-cols-3 gap-8">
-        {/* Detail Film */}
+
         <div className="flex flex-col items-center gap-6">
           <img
             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -177,7 +177,7 @@ const Checkout = () => {
             ⭐ {movie.vote_average.toFixed(1)}
           </div>
 
-          {/* Sinopsis */}
+
           <div className="w-full bg-white rounded-lg p-4 shadow-lg">
             <h2 className="font-semibold text-lg mb-2">Sinopsis</h2>
             <p className="text-gray-700 leading-relaxed">
@@ -185,7 +185,7 @@ const Checkout = () => {
             </p>
           </div>
 
-          {/* Info Film */}
+
           <div className="w-full bg-white rounded-lg p-4 shadow-lg">
             <h2 className="font-semibold text-lg mb-3">Informasi Film</h2>
             <div className="grid md:grid-cols-2 gap-4 text-gray-700 text-sm">
@@ -200,11 +200,11 @@ const Checkout = () => {
           </div>
         </div>
 
-        {/* Pilihan Checkout */}
+
         <div className="md:col-span-2 flex flex-col gap-6">
           <h1 className="text-3xl font-bold">{movie.title}</h1>
 
-          {/* Genre */}
+
           <div className="flex flex-wrap gap-2">
             {movie.genres.map((g) => (
               <span key={g.id} className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
@@ -213,7 +213,7 @@ const Checkout = () => {
             ))}
           </div>
 
-          {/* Bioskop */}
+
           <div className="bg-white rounded-lg p-4 shadow-lg">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-semibold text-lg">Pilih Bioskop</h2>
@@ -237,7 +237,7 @@ const Checkout = () => {
             )}
           </div>
 
-          {/* Tanggal & Jam */}
+
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg p-4 shadow-lg">
               <div className="flex items-center justify-between mb-2">
@@ -284,7 +284,7 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Pilih Kursi */}
+
           <div className="bg-white rounded-lg p-4 shadow-lg text-center">
             <h2 className="font-semibold text-lg mb-3">Pilih Kursi</h2>
             <div className="bg-gray-300 text-gray-800 py-2 rounded mb-4">Layar</div>
@@ -331,7 +331,7 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Button Checkout */}
+
           <div className="flex gap-4">
             <button
               onClick={handleCheckout}

@@ -14,7 +14,6 @@ export default function Navbar() {
     { name: "About Us", path: "/about" },
   ];
 
-  // Klik luar untuk tutup dropdown
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -33,7 +32,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 flex justify-between items-center px-8 py-4 shadow-md bg-white">
       <div className="text-2xl font-bold text-cyan-600">CinemaPlus</div>
 
-      {/* Menu utama */}
+
       <div className="flex space-x-6">
         {menuItems.map((item) => (
           <NavLink
@@ -52,7 +51,7 @@ export default function Navbar() {
         ))}
       </div>
 
-      {/* Bagian kanan */}
+
       <div className="flex items-center space-x-4">
         {!user ? (
           <>
@@ -74,7 +73,7 @@ export default function Navbar() {
           </>
         ) : (
           <>
-              {/* Cart */}
+
             <Link
               to="/cart"
                 className="p-2 rounded-full text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white transition-all duration-300"
@@ -82,7 +81,7 @@ export default function Navbar() {
               <ShoppingCart className="w-5 h-5" />
             </Link>
 
-              {/* Dropdown */}
+
               <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen((prev) => !prev)}

@@ -11,7 +11,7 @@ import NotFound from "./pages/NotFound";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Tiket from "./pages/Tiket";
-import Profile from "./pages/Profile"; // ⬅️ tambahkan import
+import Profile from "./pages/Profile";
 
 const App = () => {
   const location = useLocation();

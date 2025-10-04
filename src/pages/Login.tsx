@@ -29,14 +29,14 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-cyan-500 to-blue-600">
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
-        {/* Logo */}
+
         <div className="flex justify-center mb-6">
           <div className="bg-sky-100 p-4 rounded-full">
             <Film className="h-10 w-10 text-sky-600" />
           </div>
         </div>
 
-        {/* Judul */}
+
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
           Masuk ke CinemaPlus
         </h2>
@@ -44,14 +44,14 @@ export default function Login() {
           Masuk ke akun Anda untuk menikmati pengalaman menonton terbaik
         </p>
 
-        {/* ✅ Pesan error */}
+
         {error && (
           <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm">
             {error}
           </div>
         )}
 
-        {/* Form */}
+
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

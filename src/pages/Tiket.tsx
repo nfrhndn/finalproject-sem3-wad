@@ -82,21 +82,21 @@ const Tiket = () => {
                     clipPath: "path('M20 0 Hcalc(100% - 20px) C100% 20,100% 60,calc(100% - 20px) 80 H20 C0 60,0 20,20 0 Z')"
                   }}
                 >
-                  {/* Label Status */}
+
                   <span
                     className={`absolute top-3 right-3 text-xs text-white px-3 py-1 rounded-full ${status.color}`}
                   >
                     {status.label}
                   </span>
 
-                  {/* Poster */}
+
                   <img
                     src={`${TMDB_BASE_URL}${item.poster}`}
                     alt={item.title}
                     className="w-28 h-40 object-cover rounded-md shadow-sm self-end"
                   />
 
-                  {/* Konten Kanan */}
+
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
                       <h2 className="text-xl font-bold mb-1">{item.title}</h2>
@@ -117,7 +117,7 @@ const Tiket = () => {
                       </div>
                     </div>
 
-                    {/* Kursi & Harga sejajar bawah */}
+
                     <div className="flex justify-between items-end mt-4">
                       <p className="text-sm">
                         Kursi:{" "}
