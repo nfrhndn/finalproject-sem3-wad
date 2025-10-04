@@ -13,6 +13,7 @@ interface TicketItem {
   seats: string[];
   total: number;
   bookingCode: string;
+  createdAt?: string;
 }
 
 const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w200";
@@ -21,22 +22,25 @@ const Tiket = () => {
   const [tickets, setTickets] = useState<TicketItem[]>([]);
 
   useEffect(() => {
-    const load = async () => {
+    const loadTickets = async () => {
       try {
         const res = await fetchTickets();
-        // Urutkan berdasarkan waktu ditambahkan terbaru
-        if (res.success) {
-          const sortedTickets = [...res.tickets].sort(
-            (a: any, b: any) => b.id - a.id
-          );
+        if (res.success && res.tickets) {
+          const sortedTickets = [...res.tickets].sort((a: any, b: any) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
+            return dateB - dateA;
+          });
           setTickets(sortedTickets);
+        } else {
+          setTickets([]);
         }
       } catch (err) {
-        console.error("Gagal load tiket:", err);
+        console.error("Gagal memuat tiket:", err);
         setTickets([]);
       }
     };
-    load();
+    loadTickets();
   }, []);
 
   const getStatus = (date: string, time: string) => {
@@ -45,10 +49,7 @@ const Tiket = () => {
 
     if (ticketDateTime > now) {
       return { label: "Aktif", color: "bg-green-500" };
-    } else if (
-      ticketDateTime.toDateString() === now.toDateString() &&
-      ticketDateTime < now
-    ) {
+    } else if (ticketDateTime.toDateString() === now.toDateString() && ticketDateTime < now) {
       return { label: "Sudah Digunakan", color: "bg-gray-400" };
     } else {
       return { label: "Kadaluarsa", color: "bg-red-500" };
@@ -88,22 +89,19 @@ const Tiket = () => {
                   clipPath:
                     "path('M20 0 Hcalc(100% - 20px) C100% 20,100% 60,calc(100% - 20px) 80 H20 C0 60,0 20,20 0 Z')",
                 }}
-              >
-                {/* Status Label */}
+                >
                 <span
                   className={`absolute top-3 right-3 text-xs text-white px-3 py-1 rounded-full ${status.color}`}
                 >
                   {status.label}
                 </span>
 
-                {/* Poster Film */}
                 <img
                   src={`${TMDB_BASE_URL}${item.poster}`}
                   alt={item.title}
                   className="w-28 h-40 object-cover rounded-md shadow-sm self-end"
                 />
 
-                {/* Konten Tiket */}
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <h2 className="text-xl font-bold mb-1">{item.title}</h2>
