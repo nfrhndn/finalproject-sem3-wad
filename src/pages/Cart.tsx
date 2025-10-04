@@ -32,34 +32,22 @@ const Cart = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCart = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/booking");
-        const data = await res.json();
-        setCart((data.bookings || []).reverse());
-      } catch (error) {
-        console.error("Gagal fetch cart dari backend:", error);
-        const storedCart: CartItem[] = JSON.parse(
-          localStorage.getItem("cart") || "[]"
-        );
-        setCart(storedCart.reverse());
-      }
-    };
-
-    fetchCart();
+    try {
+      const storedCart: CartItem[] = JSON.parse(
+        localStorage.getItem("cart") || "[]"
+      );
+      setCart(storedCart.reverse());
+    } catch (error) {
+      console.error("Gagal parse cart:", error);
+      setCart([]);
+    }
   }, []);
 
-  const handleRemove = async (id: number) => {
-    try {
-      await fetch(`http://localhost:5000/api/booking/${id}`, {
-        method: "DELETE",
-      });
-      const updatedCart = cart.filter((item) => item.id !== id);
-      setCart(updatedCart);
-      setSelectedItems((prev) => prev.filter((i) => i !== id));
-    } catch (error) {
-      console.error("Gagal hapus booking:", error);
-    }
+  const handleRemove = (id: number) => {
+    const updatedCart = cart.filter((item) => item.id !== id);
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    setSelectedItems((prev) => prev.filter((i) => i !== id));
   };
 
   const handleEdit = (item: CartItem) => {
@@ -112,30 +100,36 @@ const Cart = () => {
     },
   ];
 
-  const handlePayment = async () => {
+  const handlePayment = () => {
     if (selectedCartItems.length === 0 || !selectedPayment) return;
 
-    try {
-      const res = await fetch("http://localhost:5000/api/booking/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+    const existingTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
 
-      const data = await res.json();
+    const generateBookingCode = (prefix: string) =>
+      prefix.toUpperCase().slice(0, 3) +
+      Math.floor(100000 + Math.random() * 900000).toString();
 
-      if (data.success) {
-        setCart([]);
-        setSelectedItems([]);
-        localStorage.removeItem("cart");
+    const newTickets = selectedCartItems.map((item) => ({
+      ...item,
+      bookingCode: generateBookingCode(item.title),
+      poster: item.poster?.startsWith("http")
+        ? item.poster
+        : `https://image.tmdb.org/t/p/w500${item.poster}`,
+    }));
 
-        alert("Pembayaran berhasil! Tiket sudah ditambahkan ke MyTicket");
-        navigate("/tiket");
-      } else {
-        alert("Checkout gagal: " + data.message);
-      }
-    } catch (error) {
-      console.error("Gagal checkout:", error);
-    }
+    localStorage.setItem(
+      "tickets",
+      JSON.stringify([...existingTickets, ...newTickets])
+    );
+
+    const remainingCart = cart.filter(
+      (item) => !selectedItems.includes(item.id)
+    );
+    setCart(remainingCart);
+    localStorage.setItem("cart", JSON.stringify(remainingCart));
+
+    alert("Pembayaran berhasil! Tiket sudah ditambahkan ke riwayat.");
+    navigate("/tiket");
   };
 
   return (
@@ -155,7 +149,7 @@ const Cart = () => {
             cart.map((item) => (
               <div
                 key={item.id}
-                className="bg-white border rounded-lg p-5 shadow flex flex-col sm:flex-row gap-4"
+                className="bg-white rounded-lg p-5 shadow flex flex-col sm:flex-row gap-4"
               >
                 <div className="flex gap-3 items-start">
                   <input
@@ -233,7 +227,7 @@ const Cart = () => {
         </div>
 
         {cart.length > 0 && (
-          <div className="bg-white border rounded-lg p-5 shadow h-fit sticky top-20">
+          <div className="bg-white rounded-lg p-5 shadow h-fit sticky top-20">
             <h2 className="text-lg font-semibold mb-4">Rincian Pesanan</h2>
 
             <div className="text-sm text-gray-700 flex flex-col gap-3">
@@ -256,7 +250,7 @@ const Cart = () => {
               )}
             </div>
 
-            <hr className="my-3" />
+            <hr className="my-3 border-gray-300" />
             <div className="flex flex-col sm:flex-row justify-between sm:items-center font-bold text-lg text-cyan-700 gap-2">
               <span>Total</span>
               <span>Rp {totalAmount.toLocaleString("id-ID")}</span>
@@ -269,7 +263,7 @@ const Cart = () => {
             <div>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="w-full flex justify-between items-center border rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-50"
+                className="w-full flex justify-between items-center border border-gray-300 rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-50"
               >
                 {selectedPayment ? (
                   <span className="flex items-center gap-2">
@@ -290,18 +284,17 @@ const Cart = () => {
               </button>
 
               {showDropdown && (
-                <div className="mt-2 border rounded-lg bg-white shadow p-3 space-y-4">
+                <div className="mt-2 border border-gray-300 rounded-lg bg-white shadow p-3 space-y-4">
                   {paymentOptions.map((group) => (
                     <div key={group.category}>
                       <p className="text-sm font-semibold text-gray-600 mb-2">
                         {group.category}
                       </p>
                       <div
-                        className={`grid gap-3 ${
-                          group.options.length > 1
-                            ? "grid-cols-2"
-                            : "grid-cols-1"
-                        }`}
+                        className={`grid gap-3 ${group.options.length > 1
+                          ? "grid-cols-2"
+                          : "grid-cols-1"
+                          }`}
                       >
                         {group.options.map((opt) => (
                           <button
@@ -310,7 +303,7 @@ const Cart = () => {
                               setSelectedPayment(opt.name);
                               setShowDropdown(false);
                             }}
-                            className="flex items-center justify-center border rounded-lg hover:bg-gray-100 w-full h-14"
+                            className="flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 w-full h-14"
                           >
                             <img
                               src={opt.icon}
@@ -329,18 +322,17 @@ const Cart = () => {
             <button
               onClick={handlePayment}
               disabled={selectedCartItems.length === 0 || !selectedPayment}
-              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${
-                selectedCartItems.length > 0 && selectedPayment
-                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 cursor-pointer"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${selectedCartItems.length > 0 && selectedPayment
+                ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 cursor-pointer"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
             >
               Bayar Sekarang
             </button>
 
             <button
               onClick={() => navigate("/film")}
-              className="w-full mt-3 px-4 py-3 rounded-lg border text-gray-600 hover:bg-gray-100"
+              className="w-full mt-3 px-4 py-3 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100"
             >
               Lanjut Belanja
             </button>

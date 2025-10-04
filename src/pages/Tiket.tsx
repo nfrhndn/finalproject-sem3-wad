@@ -14,30 +14,19 @@ interface TicketItem {
   bookingCode: string;
 }
 
+const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w200";
+
 const Tiket = () => {
   const [tickets, setTickets] = useState<TicketItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/booking/tickets");
-        const data = await res.json();
-
-        if (data.success && Array.isArray(data.tickets)) {
-          setTickets(data.tickets);
-        } else {
-          setTickets([]);
-        }
-      } catch (error) {
-        console.error("Gagal load tiket:", error);
-        setTickets([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTickets();
+    try {
+      const storedTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
+      setTickets(storedTickets);
+    } catch (error) {
+      console.error("Gagal load tiket:", error);
+      setTickets([]);
+    }
   }, []);
 
   const getStatus = (date: string, time: string) => {
@@ -58,16 +47,11 @@ const Tiket = () => {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   };
-
-  if (loading) {
-    return <p className="text-center text-gray-500">Loading tiket...</p>;
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -92,54 +76,65 @@ const Tiket = () => {
               return (
                 <div
                   key={item.id}
-                  className="bg-white border rounded-lg p-5 shadow flex gap-4 items-start"
+                  className="relative bg-white border border-gray-300 shadow-md flex gap-4 items-stretch
+                             px-5 py-6 overflow-hidden rounded-lg"
+                  style={{
+                    clipPath: "path('M20 0 Hcalc(100% - 20px) C100% 20,100% 60,calc(100% - 20px) 80 H20 C0 60,0 20,20 0 Z')"
+                  }}
                 >
+                  {/* Label Status */}
+                  <span
+                    className={`absolute top-3 right-3 text-xs text-white px-3 py-1 rounded-full ${status.color}`}
+                  >
+                    {status.label}
+                  </span>
+
+                  {/* Poster */}
                   <img
-                    src={item.poster}
+                    src={`${TMDB_BASE_URL}${item.poster}`}
                     alt={item.title}
-                    className="w-24 h-36 object-cover rounded-md"
+                    className="w-28 h-40 object-cover rounded-md shadow-sm self-end"
                   />
 
-                  <div className="flex-1">
-                    <h2 className="text-lg font-semibold">{item.title}</h2>
-                    <p className="text-sm text-gray-500">
-                      Kode Booking: {item.bookingCode}
-                    </p>
+                  {/* Konten Kanan */}
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold mb-1">{item.title}</h2>
+                      <p className="text-sm text-gray-500 mb-3">
+                        Kode Booking: {item.bookingCode}
+                      </p>
 
-                    <div className="flex items-center text-sm text-gray-600 gap-6 mt-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" /> {item.cinema}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" /> {formatDate(item.date)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock3 className="w-4 h-4" /> {item.time}
-                      </span>
+                      <div className="flex items-center text-sm text-gray-600 gap-8">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" /> {item.cinema}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" /> {formatDate(item.date)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock3 className="w-4 h-4" /> {item.time}
+                        </span>
+                      </div>
                     </div>
 
-                    <p className="mt-2 text-sm">
-                      Kursi:{" "}
-                      {item.seats.map((seat) => (
-                        <span
-                          key={seat}
-                          className="inline-block bg-gray-200 px-2 py-1 rounded-md mr-2 text-xs"
-                        >
-                          {seat}
-                        </span>
-                      ))}
-                    </p>
-                  </div>
+                    {/* Kursi & Harga sejajar bawah */}
+                    <div className="flex justify-between items-end mt-4">
+                      <p className="text-sm">
+                        Kursi:{" "}
+                        {item.seats.map((seat) => (
+                          <span
+                            key={seat}
+                            className="inline-block bg-gray-200 px-2 py-1 rounded-md mr-2 text-xs"
+                          >
+                            {seat}
+                          </span>
+                        ))}
+                      </p>
 
-                  <div className="flex flex-col items-end gap-2">
-                    <span className="font-bold text-lg text-cyan-700">
-                      Rp {item.total.toLocaleString("id-ID")}
-                    </span>
-                    <span
-                      className={`text-xs text-white px-3 py-1 rounded-full ${status.color}`}
-                    >
-                      {status.label}
-                    </span>
+                      <span className="font-bold text-lg text-cyan-700">
+                        Rp {item.total.toLocaleString("id-ID")}
+                      </span>
+                    </div>
                   </div>
                 </div>
               );

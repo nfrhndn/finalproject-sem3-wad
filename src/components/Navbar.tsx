@@ -1,11 +1,12 @@
 import { ShoppingCart, User, Ticket } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const menuItems = [
     { name: "Beranda", path: "/" },
@@ -13,10 +14,26 @@ export default function Navbar() {
     { name: "About Us", path: "/about" },
   ];
 
+  // Klik luar untuk tutup dropdown
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <nav className="sticky top-0 z-50 flex justify-between items-center px-8 py-4 shadow-md bg-white">
       <div className="text-2xl font-bold text-cyan-600">CinemaPlus</div>
 
+      {/* Menu utama */}
       <div className="flex space-x-6">
         {menuItems.map((item) => (
           <NavLink
@@ -35,6 +52,7 @@ export default function Navbar() {
         ))}
       </div>
 
+      {/* Bagian kanan */}
       <div className="flex items-center space-x-4">
         {!user ? (
           <>
@@ -56,41 +74,43 @@ export default function Navbar() {
           </>
         ) : (
           <>
+              {/* Cart */}
             <Link
               to="/cart"
-              className="p-2 rounded-full transition-all duration-300 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white"
+                className="p-2 rounded-full text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white transition-all duration-300"
             >
               <ShoppingCart className="w-5 h-5" />
             </Link>
 
-            <div className="relative">
+              {/* Dropdown */}
+              <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
-                className="p-2 rounded-full transition-all duration-300 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white flex items-center gap-2"
+                  className="p-2 rounded-full text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white transition-all duration-300 flex items-center gap-2"
               >
                 <User className="w-5 h-5" />
-                <span className="hidden sm:inline font-medium">
-                  {user.name}
-                </span>
+                  <span className="hidden sm:inline font-medium">{user.name}</span>
               </button>
 
               {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border">
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200">
                   <Link
                     to="/profile"
-                    className="block px-4 py-2 hover:bg-gray-100 text-sm"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
                   >
                     Profil Saya
                   </Link>
+
                     <Link
                       to="/tiket"
-                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-sm"
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
                     >
                       <Ticket className="w-4 h-4" /> Tiket Saya
                     </Link>
+
                   <button
                     onClick={logout}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-red-600"
+                      className="w-full text-left px-4 py-2 hover:bg-red-200 text-sm text-red-600 transition"
                   >
                     Logout
                   </button>

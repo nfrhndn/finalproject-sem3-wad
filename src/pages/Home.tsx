@@ -85,19 +85,19 @@ const Home = () => {
         <h2 className="text-2xl font-bold mb-6">Lokasi Bioskop</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <CinemaCard
-            name="Cinema XXI Plaza Senayan"
+            name="CGV Mall Kota"
             location="Jakarta Selatan"
-            studio="8 studio"
+            studio="6 studio"
             facilities={["IMAX", "Dolby Atmos", "4DX"]}
           />
           <CinemaCard
-            name="Cinema XXI Grand Indonesia"
+            name="XXI Plaza Central"
             location="Jakarta Pusat"
-            studio="12 studio"
+            studio="6 studio"
             facilities={["IMAX", "Dolby Atmos", "VIP"]}
           />
           <CinemaCard
-            name="Cinema XXI Pacific Place"
+            name="Cinepolis Grand Square"
             location="Jakarta Selatan"
             studio="6 studio"
             facilities={["Dolby Atmos", "VIP"]}
