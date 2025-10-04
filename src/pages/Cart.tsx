@@ -9,6 +9,7 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
+import { getCartApi, removeFromCartApi, checkoutApi } from "../Services/api";
 
 interface CartItem {
   id: number;
@@ -16,11 +17,11 @@ interface CartItem {
   title: string;
   poster: string;
   cinema: string;
-  date?: string;
+  date: string;
   time: string;
   seats: string[];
-  price?: number;
-  total?: number;
+  price: number;
+  total: number;
 }
 
 const Cart = () => {
@@ -32,22 +33,31 @@ const Cart = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    try {
-      const storedCart: CartItem[] = JSON.parse(
-        localStorage.getItem("cart") || "[]"
-      );
-      setCart(storedCart.reverse());
-    } catch (error) {
-      console.error("Gagal parse cart:", error);
-      setCart([]);
-    }
+    const fetchCart = async () => {
+      try {
+        const data = await getCartApi();
+        if (data.success) {
+          setCart(data.cart.reverse());
+        }
+      } catch (error) {
+        console.error("Gagal fetch cart:", error);
+        setCart([]);
+      }
+    };
+
+    fetchCart();
   }, []);
 
-  const handleRemove = (id: number) => {
-    const updatedCart = cart.filter((item) => item.id !== id);
-    setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    setSelectedItems((prev) => prev.filter((i) => i !== id));
+  const handleRemove = async (id: number) => {
+    try {
+      const data = await removeFromCartApi(id);
+      if (data.success) {
+        setCart(cart.filter((item) => item.id !== id));
+        setSelectedItems((prev) => prev.filter((i) => i !== id));
+      }
+    } catch (error) {
+      console.error("Gagal hapus item:", error);
+    }
   };
 
   const handleEdit = (item: CartItem) => {
@@ -100,36 +110,24 @@ const Cart = () => {
     },
   ];
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (selectedCartItems.length === 0 || !selectedPayment) return;
 
-    const existingTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
+    try {
+      const data = await checkoutApi({
+        items: selectedCartItems,
+        paymentMethod: selectedPayment,
+      });
 
-    const generateBookingCode = (prefix: string) =>
-      prefix.toUpperCase().slice(0, 3) +
-      Math.floor(100000 + Math.random() * 900000).toString();
-
-    const newTickets = selectedCartItems.map((item) => ({
-      ...item,
-      bookingCode: generateBookingCode(item.title),
-      poster: item.poster?.startsWith("http")
-        ? item.poster
-        : `https://image.tmdb.org/t/p/w500${item.poster}`,
-    }));
-
-    localStorage.setItem(
-      "tickets",
-      JSON.stringify([...existingTickets, ...newTickets])
-    );
-
-    const remainingCart = cart.filter(
-      (item) => !selectedItems.includes(item.id)
-    );
-    setCart(remainingCart);
-    localStorage.setItem("cart", JSON.stringify(remainingCart));
-
-    alert("Pembayaran berhasil! Tiket sudah ditambahkan ke riwayat.");
-    navigate("/tiket");
+      if (data.success) {
+        alert("Pembayaran berhasil! Tiket sudah ditambahkan ke riwayat.");
+        setCart(cart.filter((item) => !selectedItems.includes(item.id)));
+        setSelectedItems([]);
+        navigate("/tiket");
+      }
+    } catch (error) {
+      console.error("Checkout gagal:", error);
+    }
   };
 
   return (
@@ -291,10 +289,11 @@ const Cart = () => {
                         {group.category}
                       </p>
                       <div
-                        className={`grid gap-3 ${group.options.length > 1
-                          ? "grid-cols-2"
-                          : "grid-cols-1"
-                          }`}
+                        className={`grid gap-3 ${
+                          group.options.length > 1
+                            ? "grid-cols-2"
+                            : "grid-cols-1"
+                        }`}
                       >
                         {group.options.map((opt) => (
                           <button
@@ -322,10 +321,11 @@ const Cart = () => {
             <button
               onClick={handlePayment}
               disabled={selectedCartItems.length === 0 || !selectedPayment}
-              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${selectedCartItems.length > 0 && selectedPayment
-                ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 cursor-pointer"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
+              className={`w-full mt-5 px-4 py-3 rounded-lg font-medium shadow ${
+                selectedCartItems.length > 0 && selectedPayment
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 cursor-pointer"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Bayar Sekarang
             </button>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Ticket as TicketIcon, Calendar, Clock3, MapPin } from "lucide-react";
+import { fetchTickets } from "../Services/api";
 
 interface TicketItem {
   id: number;
@@ -20,13 +21,16 @@ const Tiket = () => {
   const [tickets, setTickets] = useState<TicketItem[]>([]);
 
   useEffect(() => {
-    try {
-      const storedTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
-      setTickets(storedTickets);
-    } catch (error) {
-      console.error("Gagal load tiket:", error);
-      setTickets([]);
-    }
+    const load = async () => {
+      try {
+        const res = await fetchTickets();
+        if (res.success) setTickets(res.tickets.reverse());
+      } catch (err) {
+        console.error("Gagal load tiket:", err);
+        setTickets([]);
+      }
+    };
+    load();
   }, []);
 
   const getStatus = (date: string, time: string) => {
@@ -79,23 +83,21 @@ const Tiket = () => {
                   className="relative bg-white border border-gray-300 shadow-md flex gap-4 items-stretch
                              px-5 py-6 overflow-hidden rounded-lg"
                   style={{
-                    clipPath: "path('M20 0 Hcalc(100% - 20px) C100% 20,100% 60,calc(100% - 20px) 80 H20 C0 60,0 20,20 0 Z')"
+                    clipPath:
+                      "path('M20 0 Hcalc(100% - 20px) C100% 20,100% 60,calc(100% - 20px) 80 H20 C0 60,0 20,20 0 Z')",
                   }}
                 >
-
                   <span
                     className={`absolute top-3 right-3 text-xs text-white px-3 py-1 rounded-full ${status.color}`}
                   >
                     {status.label}
                   </span>
 
-
                   <img
                     src={`${TMDB_BASE_URL}${item.poster}`}
                     alt={item.title}
                     className="w-28 h-40 object-cover rounded-md shadow-sm self-end"
                   />
-
 
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
@@ -109,14 +111,14 @@ const Tiket = () => {
                           <MapPin className="w-4 h-4" /> {item.cinema}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" /> {formatDate(item.date)}
+                          <Calendar className="w-4 h-4" />{" "}
+                          {formatDate(item.date)}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock3 className="w-4 h-4" /> {item.time}
                         </span>
                       </div>
                     </div>
-
 
                     <div className="flex justify-between items-end mt-4">
                       <p className="text-sm">

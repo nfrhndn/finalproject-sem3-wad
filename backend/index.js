@@ -7,6 +7,8 @@ import cors from "cors";
 import authRoutes from "./routes/AuthRoute.js";
 import movieRoutes from "./routes/MovieRoute.js";
 import bookingRoutes from "./routes/BookingRoute.js";
+import cartRoutes from "./routes/CartRoute.js";
+import ticketRoutes from "./routes/TicketRoute.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +28,8 @@ app.get("/", (req, res) => {
 app.use("/api", authRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/booking", bookingRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/tickets", ticketRoutes);
 
 app.use((err, req, res, next) => {
   console.error("🔥 Unexpected Error:", err.stack || err);

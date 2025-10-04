@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MapPin, Clock3, Calendar } from "lucide-react";
+import { addToCart, updateCartApi } from "../Services/api";
 
 interface Movie {
   id: number;
@@ -123,9 +124,17 @@ const Checkout = () => {
     return `${d}-${m}-${y}`;
   };
 
-  const handleCheckout = () => {
-    if (!movie || !selectedCinema || !selectedDate || !selectedTime || selectedSeats.length === 0) {
-      alert("Lengkapi pilihan bioskop, tanggal, jam, dan kursi terlebih dahulu.");
+  const handleAddToCart = async () => {
+    if (
+      !movie ||
+      !selectedCinema ||
+      !selectedDate ||
+      !selectedTime ||
+      selectedSeats.length === 0
+    ) {
+      alert(
+        "Lengkapi pilihan bioskop, tanggal, jam, dan kursi terlebih dahulu."
+      );
       return;
     }
 
@@ -142,18 +151,19 @@ const Checkout = () => {
       total: totalPrice,
     };
 
-    const existingCart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
+    try {
+      if (isEdit && editId) {
+        await updateCartApi(editId, order);
+      } else {
+        await addToCart(order);
+      }
 
-    const updatedCart = isEdit && editId
-      ? existingCart.map((it) => (it.id === editId ? order : it))
-      : [...existingCart, order];
-
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-
-    setIsEdit(false);
-    setEditId(null);
-
-    navigate("/cart");
+      setIsEdit(false);
+      setEditId(null);
+      navigate("/cart");
+    } catch (err) {
+      console.error("Gagal menyimpan data:", err);
+    }
   };
 
   return (
@@ -166,7 +176,6 @@ const Checkout = () => {
       </button>
 
       <div className="grid md:grid-cols-3 gap-8">
-
         <div className="flex flex-col items-center gap-6">
           <img
             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -177,42 +186,63 @@ const Checkout = () => {
             ⭐ {movie.vote_average.toFixed(1)}
           </div>
 
-
           <div className="w-full bg-white rounded-lg p-4 shadow-lg">
             <h2 className="font-semibold text-lg mb-2">Sinopsis</h2>
             <p className="text-gray-700 leading-relaxed">
-              {movie.overview?.trim() !== "" ? movie.overview : "Sinopsis tidak tersedia."}
+              {movie.overview?.trim() !== ""
+                ? movie.overview
+                : "Sinopsis tidak tersedia."}
             </p>
           </div>
-
 
           <div className="w-full bg-white rounded-lg p-4 shadow-lg">
             <h2 className="font-semibold text-lg mb-3">Informasi Film</h2>
             <div className="grid md:grid-cols-2 gap-4 text-gray-700 text-sm">
-              <p><strong>Sutradara:</strong> {credits?.crew.find((c) => c.job === "Director")?.name || "Tidak tersedia"}</p>
-              <p><strong>Bahasa:</strong> {movie.original_language}</p>
-              <p><strong>Pemeran:</strong> {credits?.cast.slice(0, 3).map((c) => c.name).join(", ") || "Tidak tersedia"}</p>
-              <p><strong>Subtitle:</strong> Bahasa Indonesia, English</p>
-              <p><strong>Genre:</strong> {movie.genres.map((g) => g.name).join(", ")}</p>
-              <p><strong>Durasi:</strong> {movie.runtime} menit</p>
-              <p><strong>Tanggal Rilis:</strong> {movie.release_date}</p>
+              <p>
+                <strong>Sutradara:</strong>{" "}
+                {credits?.crew.find((c) => c.job === "Director")?.name ||
+                  "Tidak tersedia"}
+              </p>
+              <p>
+                <strong>Bahasa:</strong> {movie.original_language}
+              </p>
+              <p>
+                <strong>Pemeran:</strong>{" "}
+                {credits?.cast
+                  .slice(0, 3)
+                  .map((c) => c.name)
+                  .join(", ") || "Tidak tersedia"}
+              </p>
+              <p>
+                <strong>Subtitle:</strong> Bahasa Indonesia, English
+              </p>
+              <p>
+                <strong>Genre:</strong>{" "}
+                {movie.genres.map((g) => g.name).join(", ")}
+              </p>
+              <p>
+                <strong>Durasi:</strong> {movie.runtime} menit
+              </p>
+              <p>
+                <strong>Tanggal Rilis:</strong> {movie.release_date}
+              </p>
             </div>
           </div>
         </div>
 
-
         <div className="md:col-span-2 flex flex-col gap-6">
           <h1 className="text-3xl font-bold">{movie.title}</h1>
 
-
           <div className="flex flex-wrap gap-2">
             {movie.genres.map((g) => (
-              <span key={g.id} className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
+              <span
+                key={g.id}
+                className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm"
+              >
                 {g.name}
               </span>
             ))}
           </div>
-
 
           <div className="bg-white rounded-lg p-4 shadow-lg">
             <div className="flex items-center justify-between mb-2">
@@ -226,17 +256,21 @@ const Checkout = () => {
             >
               <option value=""> Pilih Bioskop </option>
               {cinemas.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
             {selectedCinema && (
               <p className="mt-3 text-sm text-cyan-600">
                 Bioskop: <strong>{selectedCinema}</strong> <br />
-                Harga per tiket: <strong>Rp {cinemaPrices[selectedCinema].toLocaleString("id-ID")}</strong>
+                Harga per tiket:{" "}
+                <strong>
+                  Rp {cinemaPrices[selectedCinema].toLocaleString("id-ID")}
+                </strong>
               </p>
             )}
           </div>
-
 
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg p-4 shadow-lg">
@@ -252,7 +286,8 @@ const Checkout = () => {
               />
               {selectedDate && (
                 <p className="mt-3 text-sm text-cyan-600">
-                  Tanggal dipilih: <strong>{formatDateDisplay(selectedDate)}</strong>
+                  Tanggal dipilih:{" "}
+                  <strong>{formatDateDisplay(selectedDate)}</strong>
                 </p>
               )}
             </div>
@@ -267,10 +302,11 @@ const Checkout = () => {
                   <button
                     key={t}
                     onClick={() => setSelectedTime(t)}
-                    className={`px-4 py-2 rounded-lg border border-gray-300 transition ${selectedTime === t
-                      ? "bg-cyan-600 text-white border-cyan-600"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                    className={`px-4 py-2 rounded-lg border border-gray-300 transition ${
+                      selectedTime === t
+                        ? "bg-cyan-600 text-white border-cyan-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
                     {t}
                   </button>
@@ -284,17 +320,21 @@ const Checkout = () => {
             </div>
           </div>
 
-
           <div className="bg-white rounded-lg p-4 shadow-lg text-center">
             <h2 className="font-semibold text-lg mb-3">Pilih Kursi</h2>
-            <div className="bg-gray-300 text-gray-800 py-2 rounded mb-4">Layar</div>
+            <div className="bg-gray-300 text-gray-800 py-2 rounded mb-4">
+              Layar
+            </div>
 
             <div className="overflow-x-auto">
               <div className="flex flex-col gap-3 items-center min-w-max px-2">
                 {rows.map((row) => (
                   <div key={row} className="inline-flex gap-2 items-center">
                     {cols.map((col) => {
-                      if (col === 7) return <div key={`gap-${row}`} className="w-4 sm:w-6" />;
+                      if (col === 7)
+                        return (
+                          <div key={`gap-${row}`} className="w-4 sm:w-6" />
+                        );
                       const seat = `${row}${col}`;
                       const isOccupied = occupiedSeats.includes(seat);
                       const isSelected = selectedSeats.includes(seat);
@@ -304,12 +344,13 @@ const Checkout = () => {
                           key={seat}
                           onClick={() => toggleSeat(seat)}
                           disabled={isOccupied}
-                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-md border border-gray-300 font-medium text-xs sm:text-sm transition ${isOccupied
-                            ? "bg-green-500 text-white cursor-not-allowed"
-                            : isSelected
+                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-md border border-gray-300 font-medium text-xs sm:text-sm transition ${
+                            isOccupied
+                              ? "bg-green-500 text-white cursor-not-allowed"
+                              : isSelected
                               ? "bg-cyan-600 text-white border-cyan-600"
                               : "bg-gray-200 hover:bg-gray-300"
-                            }`}
+                          }`}
                         >
                           {seat}
                         </button>
@@ -321,9 +362,16 @@ const Checkout = () => {
             </div>
 
             <div className="flex justify-center gap-4 mt-4 text-xs sm:text-sm flex-wrap">
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-gray-200 border border-gray-300 rounded"></div> Tersedia</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-cyan-600 rounded"></div> Dipilih</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-green-500 rounded"></div> Terisi</div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-gray-200 border border-gray-300 rounded"></div>{" "}
+                Tersedia
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-cyan-600 rounded"></div> Dipilih
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-green-500 rounded"></div> Terisi
+              </div>
             </div>
 
             <div className="mt-4 text-lg font-semibold text-cyan-700">
@@ -331,15 +379,23 @@ const Checkout = () => {
             </div>
           </div>
 
-
           <div className="flex gap-4">
             <button
-              onClick={handleCheckout}
-              disabled={!selectedCinema || !selectedDate || !selectedTime || selectedSeats.length === 0}
-              className={`flex-1 px-6 py-3 rounded-lg shadow-md transition ${selectedCinema && selectedDate && selectedTime && selectedSeats.length > 0
-                ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
+              onClick={handleAddToCart}
+              disabled={
+                !selectedCinema ||
+                !selectedDate ||
+                !selectedTime ||
+                selectedSeats.length === 0
+              }
+              className={`flex-1 px-6 py-3 rounded-lg shadow-md transition ${
+                selectedCinema &&
+                selectedDate &&
+                selectedTime &&
+                selectedSeats.length > 0
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               {isEdit ? "Simpan Perubahan" : "Masukkan Keranjang"}
             </button>

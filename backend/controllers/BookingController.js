@@ -60,13 +60,13 @@ export const createBooking = (req, res) => {
 
     bookings.push(newBooking);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "✅ Booking berhasil ditambahkan ke cart",
       booking: newBooking,
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "❌ Gagal membuat booking",
       error: err.message,
@@ -74,38 +74,23 @@ export const createBooking = (req, res) => {
   }
 };
 
-export const getBookings = (req, res) => {
-  res.json({
+export const addToCart = (req, res) => createBooking(req, res);
+
+export const getCart = (req, res) => {
+  return res.json({
     success: true,
-    bookings,
+    cart: bookings,
   });
 };
 
-export const getBookingById = (req, res) => {
+export const removeFromCart = (req, res) => {
   const { id } = req.params;
-  const booking = bookings.find((b) => b.id == id);
+  bookings = bookings.filter((b) => String(b.id) !== String(id));
 
-  if (!booking) {
-    return res.status(404).json({
-      success: false,
-      message: "❌ Booking tidak ditemukan",
-    });
-  }
-
-  res.json({
+  return res.json({
     success: true,
-    booking,
-  });
-};
-
-export const deleteBooking = (req, res) => {
-  const { id } = req.params;
-  bookings = bookings.filter((b) => b.id != id);
-
-  res.json({
-    success: true,
-    message: "🗑️ Booking berhasil dihapus dari cart",
-    bookings,
+    message: "🗑️ Item berhasil dihapus dari cart",
+    cart: bookings,
   });
 };
 
@@ -128,16 +113,15 @@ export const checkoutBooking = (req, res) => {
     }));
 
     tickets.push(...checkedOutTickets);
-
     bookings = [];
 
-    res.json({
+    return res.json({
       success: true,
       message: "💳 Checkout berhasil, tiket tersimpan!",
-      tickets,
+      tickets: checkedOutTickets,
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "❌ Gagal melakukan checkout",
       error: err.message,
@@ -145,8 +129,43 @@ export const checkoutBooking = (req, res) => {
   }
 };
 
+export const getBookings = (req, res) => {
+  return res.json({
+    success: true,
+    bookings,
+  });
+};
+
+export const getBookingById = (req, res) => {
+  const { id } = req.params;
+  const booking = bookings.find((b) => String(b.id) === String(id));
+
+  if (!booking) {
+    return res.status(404).json({
+      success: false,
+      message: "❌ Booking tidak ditemukan",
+    });
+  }
+
+  return res.json({
+    success: true,
+    booking,
+  });
+};
+
+export const deleteBooking = (req, res) => {
+  const { id } = req.params;
+  bookings = bookings.filter((b) => String(b.id) !== String(id));
+
+  return res.json({
+    success: true,
+    message: "🗑️ Booking berhasil dihapus",
+    bookings,
+  });
+};
+
 export const getTickets = (req, res) => {
-  res.json({
+  return res.json({
     success: true,
     tickets,
   });
