@@ -16,6 +16,7 @@ import { useAuth } from "../context/AuthContext";
 
 const Profile = () => {
   const { user } = useAuth();
+
   const [formData, setFormData] = useState({
     avatar: "",
     name: "",
@@ -26,11 +27,17 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Generate storage key unique per user (misal pakai email)
+  const storageKey = user ? `profileData_${user.email}` : null;
+
   useEffect(() => {
-    const saved = localStorage.getItem("profileData");
+    if (!user) return;
+
+    const saved = storageKey ? localStorage.getItem(storageKey) : null;
+
     if (saved) {
       setFormData(JSON.parse(saved));
-    } else if (user) {
+    } else {
       setFormData({
         avatar: "",
         name: user.name || "",
@@ -38,7 +45,7 @@ const Profile = () => {
         password: "",
       });
     }
-  }, [user]);
+  }, [user, storageKey]);
 
   const getInitials = (name: string) => {
     const names = name.trim().split(" ");
@@ -57,7 +64,8 @@ const Profile = () => {
   };
 
   const handleSave = () => {
-    localStorage.setItem("profileData", JSON.stringify(formData));
+    if (!storageKey) return;
+    localStorage.setItem(storageKey, JSON.stringify(formData));
     setIsEditing(false);
     alert("✅ Profil berhasil diperbarui!");
   };
@@ -68,15 +76,13 @@ const Profile = () => {
 
   const handleDeleteAvatar = () => {
     setFormData((prev) => ({ ...prev, avatar: "" }));
-    localStorage.setItem(
-      "profileData",
-      JSON.stringify({ ...formData, avatar: "" })
-    );
+    if (storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify({ ...formData, avatar: "" }));
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-cyan-50 flex flex-col items-center py-10 px-4">
-      
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2">
           <User className="text-cyan-700" size={28} />
@@ -84,10 +90,8 @@ const Profile = () => {
         </div>
       </div>
 
-      
       <div className="bg-white shadow-md rounded-2xl p-8 w-full max-w-2xl">
         <div className="flex items-start justify-between mb-6">
-          
           <div className="relative w-20 h-20 flex-shrink-0">
             <div className="w-20 h-20 rounded-full border-2 border-gray-200 overflow-hidden flex items-center justify-center bg-cyan-700 text-white text-2xl font-bold uppercase">
               {formData.avatar ? (
@@ -101,7 +105,6 @@ const Profile = () => {
               )}
             </div>
 
-            
             {isEditing && (
               <label
                 htmlFor="avatar"
@@ -121,11 +124,9 @@ const Profile = () => {
             )}
           </div>
 
-          
           <div className="flex-grow ml-5">
             {isEditing ? (
               <div className="bg-gray-50 p-6 rounded-lg space-y-5 shadow-inner">
-                
                 <div>
                   <label
                     htmlFor="name"
