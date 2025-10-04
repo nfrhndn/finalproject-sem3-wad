@@ -27,7 +27,6 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Generate storage key unique per user (misal pakai email)
   const storageKey = user ? `profileData_${user.email}` : null;
 
   useEffect(() => {
