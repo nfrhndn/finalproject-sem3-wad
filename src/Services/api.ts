@@ -1,35 +1,69 @@
-const MOVIE_BASE_URL = "http://localhost:5000/api/movies";
-const AUTH_BASE_URL = "http://localhost:5000/api";
-const BOOKING_BASE_URL = "http://localhost:5000/api/booking";
-const CART_BASE_URL = "http://localhost:5000/api/cart";
-const TICKET_BASE_URL = "http://localhost:5000/api/tickets";
+const BASE_URL = "http://localhost:5000/api";
+const MOVIE_BASE_URL = `${BASE_URL}/movies`;
+const BOOKING_BASE_URL = `${BASE_URL}/booking`;
+const CART_BASE_URL = `${BASE_URL}/cart`;
+const TICKET_BASE_URL = `${BASE_URL}/tickets`;
 
-export const fetchPopularMovies = async () => {
-  const res = await fetch(`${MOVIE_BASE_URL}/popular`);
-  if (!res.ok) throw new Error("Gagal fetch popular movies");
-  return res.json();
-};
 
-export const fetchMovieDetail = async (id: number) => {
-  const res = await fetch(`${MOVIE_BASE_URL}/${id}`);
-  if (!res.ok) throw new Error("Gagal fetch movie detail");
-  return res.json();
-};
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload.exp < currentTime;
+  } catch {
+    return true;
+  }
+}
 
-export const fetchNowPlayingMovies = async () => {
-  const res = await fetch(`${MOVIE_BASE_URL}/now_playing`);
-  if (!res.ok) throw new Error("Gagal fetch now playing movies");
-  return res.json();
-};
+function logoutUser() {
+  localStorage.removeItem("token");
+  window.location.href = "/login";
+}
 
-export const fetchUpcomingMovies = async () => {
-  const res = await fetch(`${MOVIE_BASE_URL}/upcoming`);
-  if (!res.ok) throw new Error("Gagal fetch upcoming movies");
-  return res.json();
-};
+function getValidToken(): string | null {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  if (isTokenExpired(token)) {
+    logoutUser();
+    return null;
+  }
+  return token;
+}
+
+
+
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = getValidToken();
+  const headers = {
+    ...(options.headers || {}),
+    Authorization: token ? `Bearer ${token}` : "",
+  };
+
+  try {
+    const res = await fetch(url, { ...options, headers });
+    if (!res) throw new Error("Server tidak merespons");
+
+    if (res.status === 401) {
+      logoutUser();
+      throw new Error("Sesi Anda telah berakhir");
+    }
+
+    if (!res.ok) throw new Error(`Request gagal (${res.status})`);
+    return res.json();
+  } catch (err: any) {
+    if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
+      alert("Server sedang tidak dapat dijangkau. Silakan login ulang nanti.");
+      logoutUser();
+    }
+    throw err;
+  }
+}
+
+
 
 export const loginApi = async (email: string, password: string) => {
-  const res = await fetch(`${AUTH_BASE_URL}/login`, {
+  const res = await fetch(`${BASE_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -38,12 +72,8 @@ export const loginApi = async (email: string, password: string) => {
   return res.json();
 };
 
-export const registerApi = async (
-  name: string,
-  email: string,
-  password: string
-) => {
-  const res = await fetch(`${AUTH_BASE_URL}/register`, {
+export const registerApi = async (name: string, email: string, password: string) => {
+  const res = await fetch(`${BASE_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password }),
@@ -52,80 +82,59 @@ export const registerApi = async (
   return res.json();
 };
 
-export const bookingApi = async (order: any) => {
-  const res = await fetch(`${BOOKING_BASE_URL}/checkout`, {
+
+export const fetchPopularMovies = async () => fetchWithAuth(`${MOVIE_BASE_URL}/popular`);
+export const fetchMovieDetail = async (id: number) => fetchWithAuth(`${MOVIE_BASE_URL}/${id}`);
+export const fetchNowPlayingMovies = async () => fetchWithAuth(`${MOVIE_BASE_URL}/now_playing`);
+export const fetchUpcomingMovies = async () => fetchWithAuth(`${MOVIE_BASE_URL}/upcoming`);
+
+
+export const bookingApi = async (order: any) =>
+  fetchWithAuth(`${BOOKING_BASE_URL}/checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(order),
   });
-  if (!res.ok) throw new Error("Booking gagal");
-  return res.json();
-};
 
-export const addToCart = async (item: any) => {
-  const res = await fetch(`${CART_BASE_URL}`, {
+export const getCartApi = async () => fetchWithAuth(`${CART_BASE_URL}`);
+
+export const addToCart = async (item: any) =>
+  fetchWithAuth(`${CART_BASE_URL}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(item),
   });
-  if (!res.ok) throw new Error("Gagal menambahkan ke cart");
-  return res.json();
-};
 
-export const getCartApi = async () => {
-  const res = await fetch(`${CART_BASE_URL}`);
-  if (!res.ok) throw new Error("Gagal ambil cart");
-  return res.json();
-};
+export const removeFromCartApi = async (id: number) =>
+  fetchWithAuth(`${CART_BASE_URL}/${id}`, { method: "DELETE" });
 
-export const removeFromCartApi = async (id: number) => {
-  const res = await fetch(`${CART_BASE_URL}/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Gagal hapus item");
-  return res.json();
-};
-
-export const updateCartApi = async (id: number, item: any) => {
-  const res = await fetch(`${CART_BASE_URL}/${id}`, {
+export const updateCartApi = async (id: number, item: any) =>
+  fetchWithAuth(`${CART_BASE_URL}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(item),
   });
-  if (!res.ok) throw new Error("Gagal update item cart");
-  return res.json();
-};
 
-export const checkoutApi = async (payload: any) => {
-  const res = await fetch(`${CART_BASE_URL}/checkout`, {
+export const checkoutApi = async (payload: any) =>
+  fetchWithAuth(`${CART_BASE_URL}/checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Checkout gagal");
-  return res.json();
-};
 
-export const fetchTickets = async () => {
-  const res = await fetch(`${TICKET_BASE_URL}`);
-  if (!res.ok) throw new Error("Gagal fetch tickets");
-  return res.json();
-};
 
-export async function fetchProfileApi(token: string) {
-  const res = await fetch("http://localhost:5000/api/profile", {
+export const fetchProfileApi = async (token?: string) => {
+  const t = token || localStorage.getItem("token");
+  return fetchWithAuth(`${BASE_URL}/profile`, {
     headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${t}`,
     },
   });
-  if (!res.ok) throw new Error("Gagal ambil profil");
-  return res.json();
-}
+};
 
 export const updateProfileApi = async (payload: any, token?: string) => {
   const t = token || localStorage.getItem("token");
-  const res = await fetch("http://localhost:5000/api/user/profile", {
+  return fetchWithAuth(`${BASE_URL}/user/profile`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -133,23 +142,30 @@ export const updateProfileApi = async (payload: any, token?: string) => {
     },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Gagal update profil");
-  return res.json();
 };
 
-export const uploadAvatarApi = async (file: File, token?: string) => {
-  const t = token || localStorage.getItem("token");
-  const fd = new FormData();
-  fd.append("avatar", file);
+export const uploadAvatarApi = async (file: File) => {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("Token tidak ditemukan");
+
+  const formData = new FormData();
+  formData.append("avatar", file);
 
   const res = await fetch("http://localhost:5000/api/user/profile/avatar", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${t}`,
+      Authorization: `Bearer ${token}`,
     },
-    body: fd,
+    body: formData,
   });
 
-  if (!res.ok) throw new Error("Gagal upload avatar");
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Upload gagal: ${err}`);
+  }
+
   return res.json();
 };
+
+
+export const fetchTickets = async () => fetchWithAuth(`${TICKET_BASE_URL}`);
