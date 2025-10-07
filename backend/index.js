@@ -9,6 +9,7 @@ import movieRoutes from "./routes/MovieRoute.js";
 import bookingRoutes from "./routes/BookingRoute.js";
 import cartRoutes from "./routes/CartRoute.js";
 import ticketRoutes from "./routes/TicketRoute.js";
+import userRoutes from "./routes/UserRoute.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,11 +26,13 @@ app.get("/", (req, res) => {
   res.send("✅ Backend CinemaPlus is running. Use /api/movies or /api/auth");
 });
 
-app.use("/api", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/user", userRoutes);
+app.use("/uploads", express.static("uploads"));
 
 app.use((err, req, res, next) => {
   console.error("🔥 Unexpected Error:", err.stack || err);

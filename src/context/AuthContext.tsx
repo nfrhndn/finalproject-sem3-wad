@@ -1,16 +1,16 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginApi, registerApi } from "../Services/api";
 
 type User = {
   id: number;
   email: string;
   name: string;
-  avatar?: string;
+  avatar?: string | null;
 };
 
 type AuthContextType = {
   user: User | null;
+  token: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -18,54 +18,88 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const API_URL = "http://localhost:5000/api/auth";
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const saved = localStorage.getItem("user");
-    if (saved) {
-      const parsed = JSON.parse(saved) as User;
+    const savedUser = localStorage.getItem("user");
+    const savedToken = localStorage.getItem("token");
 
-      const validateUser = async () => {
-        try {
-          const res = await fetch("http://localhost:5000/");
-          if (!res.ok) throw new Error("Backend tidak bisa diakses");
-          setUser(parsed); 
-        } catch (err) {
-          console.error("❌ Auto logout karena backend mati atau invalid user");
-          logout(); 
-        }
-      };
-
-      validateUser();
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+      setToken(savedToken);
     }
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const res = await loginApi(email, password);
-      setUser(res.user);
-      localStorage.setItem("user", JSON.stringify(res.user));
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(
+          data.message || "Login gagal, periksa kembali email/password"
+        );
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      setUser(data.user);
+      setToken(data.token);
+
+      console.log("✅ Login sukses:", data.user);
+
       navigate("/");
-    } catch (err) {
-      throw new Error("Email atau password salah, atau akun belum terdaftar.");
+    } catch (error: any) {
+      console.error("❌ Error login:", error);
+      throw new Error(error.message || "Terjadi kesalahan server saat login");
     }
   };
 
   const register = async (name: string, email: string, password: string) => {
-    await registerApi(name, email, password);
-    navigate("/login"); 
+    try {
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Registrasi gagal, coba email lain");
+      }
+
+      alert("Registrasi berhasil! Silakan login.");
+      navigate("/login");
+    } catch (error: any) {
+      console.error("❌ Error register:", error);
+      throw new Error(
+        error.message || "Terjadi kesalahan server saat registrasi"
+      );
+    }
   };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

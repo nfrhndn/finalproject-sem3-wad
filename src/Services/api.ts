@@ -111,3 +111,45 @@ export const fetchTickets = async () => {
   if (!res.ok) throw new Error("Gagal fetch tickets");
   return res.json();
 };
+
+export async function fetchProfileApi(token: string) {
+  const res = await fetch("http://localhost:5000/api/profile", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Gagal ambil profil");
+  return res.json();
+}
+
+export const updateProfileApi = async (payload: any, token?: string) => {
+  const t = token || localStorage.getItem("token");
+  const res = await fetch("http://localhost:5000/api/user/profile", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${t}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Gagal update profil");
+  return res.json();
+};
+
+export const uploadAvatarApi = async (file: File, token?: string) => {
+  const t = token || localStorage.getItem("token");
+  const fd = new FormData();
+  fd.append("avatar", file);
+
+  const res = await fetch("http://localhost:5000/api/user/profile/avatar", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${t}`,
+    },
+    body: fd,
+  });
+
+  if (!res.ok) throw new Error("Gagal upload avatar");
+  return res.json();
+};
