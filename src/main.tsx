@@ -5,7 +5,17 @@ import App from "./App";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
 
-const root = ReactDOM.createRoot(document.getElementById("root")!);
+declare global {
+  interface Window {
+    BASE_URL: string;
+  }
+}
+
+window.BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000/api";
+
+const root = ReactDOM.createRoot(
+  document.getElementById("root") as HTMLElement
+);
 
 root.render(
   <React.StrictMode>

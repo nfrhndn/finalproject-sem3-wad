@@ -21,8 +21,10 @@ import {
   uploadAvatarApi,
 } from "../Services/api";
 
+const BASE_URL = "http://localhost:5000";
+
 const Profile = () => {
-  const { user, token } = useAuth();
+  const { user, token, setUser } = useAuth();
   const [formData, setFormData] = useState({
     avatar: "",
     name: "",
@@ -36,31 +38,41 @@ const Profile = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedLanguage, setSelectedLanguage] =
     useState<string>("Bahasa Indonesia");
-  //const [showLangDropdown, setShowLangDropdown] = useState(false);
 
-  // 🔹 Ambil profil user dari backend saat komponen pertama kali load
   useEffect(() => {
-    if (!token) {
+    const storedToken = localStorage.getItem("token");
+    if (!storedToken) {
       console.warn("Token tidak ditemukan");
       return;
     }
 
     const loadProfile = async () => {
       try {
-        const res = await fetchProfileApi(token);
+        const res = await fetchProfileApi(storedToken);
         setFormData({
           avatar: res.user?.avatar || "",
           name: res.user?.name || "",
           email: res.user?.email || "",
           password: "",
         });
+
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                name: res.user?.name,
+                email: res.user?.email,
+                avatar: res.user?.avatar,
+              }
+            : res.user
+        );
       } catch (err: any) {
         console.error("Gagal ambil profil:", err.message || err);
       }
     };
 
     loadProfile();
-  }, [token]);
+  }, []);
 
   const getInitials = (name: string) => {
     const names = name.trim().split(" ");
@@ -75,10 +87,26 @@ const Profile = () => {
       const upload = async () => {
         try {
           const file = files[0];
-          const res = await uploadAvatarApi(file, token || "");
-          setFormData((prev) => ({ ...prev, avatar: res.user.avatar }));
+          const avatarPath = await uploadAvatarApi(file);
+          const refreshed = await fetchProfileApi(token || "");
+
+          setFormData({
+            avatar: refreshed.user.avatar || avatarPath,
+            name: refreshed.user.name || formData.name,
+            email: refreshed.user.email || formData.email,
+            password: "",
+          });
+
+          setUser((prev) =>
+            prev
+              ? { ...prev, avatar: refreshed.user.avatar || avatarPath }
+              : refreshed.user
+          );
+
+          alert("✅ Foto profil berhasil diperbarui!");
         } catch (err) {
           console.error("Gagal upload avatar:", err);
+          alert("❌ Upload avatar gagal");
         }
       };
       upload();
@@ -89,12 +117,27 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      const updated = await updateProfileApi(formData, token || "");
-      setFormData({
-        ...formData,
+      const payload = {
+        name: formData.name,
+        newEmail: formData.email,
+        password: formData.password,
+      };
+
+      const updated = await updateProfileApi(payload, token || "");
+
+      setFormData((prev) => ({
+        ...prev,
         name: updated.user.name,
         email: updated.user.email,
-      });
+        password: "",
+      }));
+
+      setUser((prev) =>
+        prev
+          ? { ...prev, name: updated.user.name, email: updated.user.email }
+          : updated.user
+      );
+
       setIsEditing(false);
       alert("✅ Profil berhasil diperbarui!");
     } catch (err) {
@@ -107,8 +150,9 @@ const Profile = () => {
 
   const handleDeleteAvatar = async () => {
     try {
-      const updated = await updateProfileApi({ avatar: "" }, token || "");
-      setFormData((prev) => ({ ...prev, avatar: updated.user.avatar || "" }));
+      await updateProfileApi({ avatar: "" }, token || "");
+      setFormData((prev) => ({ ...prev, avatar: "" }));
+      setUser((prev) => (prev ? { ...prev, avatar: "" } : prev));
       alert("🗑️ Foto profil berhasil dihapus.");
     } catch (err) {
       console.error(err);
@@ -183,12 +227,25 @@ const Profile = () => {
             <div className="w-20 h-20 rounded-full border-2 border-gray-200 overflow-hidden flex items-center justify-center bg-cyan-700 text-white text-2xl font-bold uppercase">
               {formData.avatar ? (
                 <img
-                  src={formData.avatar}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
+                  src={
+                    formData.avatar
+                      ? formData.avatar.startsWith("http")
+                        ? formData.avatar
+                        : formData.avatar.includes("/uploads/")
+                        ? `${BASE_URL}${formData.avatar.replace(/^\/?/, "/")}`
+                        : `${BASE_URL}/uploads/${formData.avatar.replace(
+                            /^\/?/,
+                            ""
+                          )}`
+                      : "/default-avatar.png"
+                  }
+                  alt="avatar"
+                  className="w-24 h-24 rounded-full object-cover border border-gray-300 shadow-sm"
                 />
               ) : (
-                getInitials(formData.name || user?.name || "U")
+                <div className="w-20 h-20 rounded-full bg-cyan-700 text-white flex items-center justify-center text-xl font-semibold">
+                  {getInitials(formData.name || "User")}
+                </div>
               )}
             </div>
             {isEditing && (

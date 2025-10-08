@@ -32,7 +32,6 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 flex justify-between items-center px-8 py-4 shadow-md bg-white">
       <div className="text-2xl font-bold text-cyan-600">CinemaPlus</div>
 
-
       <div className="flex space-x-6">
         {menuItems.map((item) => (
           <NavLink
@@ -40,9 +39,10 @@ export default function Navbar() {
             to={item.path}
             className={({ isActive }) =>
               `relative px-4 py-2 rounded-lg font-medium transition-all duration-300
-              ${isActive
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
-                : "text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white"
+              ${
+                isActive
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white"
               }`
             }
           >
@@ -50,7 +50,6 @@ export default function Navbar() {
           </NavLink>
         ))}
       </div>
-
 
       <div className="flex items-center space-x-4">
         {!user ? (
@@ -73,43 +72,58 @@ export default function Navbar() {
           </>
         ) : (
           <>
-
             <Link
               to="/cart"
-                className="p-2 rounded-full text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white transition-all duration-300"
+              className="p-2 rounded-full text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white transition-all duration-300"
             >
               <ShoppingCart className="w-5 h-5" />
             </Link>
 
-
-              <div className="relative" ref={dropdownRef}>
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
-                  className="p-2 rounded-full text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white transition-all duration-300 flex items-center gap-2"
+                className="flex items-center gap-2 p-2 rounded-full text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white transition-all duration-300"
               >
-                <User className="w-5 h-5" />
-                  <span className="hidden sm:inline font-medium">{user.name}</span>
+                {user.avatar ? (
+                  <img
+                    src={
+                      user.avatar.startsWith("http")
+                        ? user.avatar
+                        : `${window.BASE_URL?.replace("/api", "")}${
+                            user.avatar
+                          }`
+                    }
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full object-cover border border-cyan-500"
+                  />
+                ) : (
+                  <User className="w-5 h-5" />
+                )}
+
+                <span className="hidden sm:inline font-medium">
+                  {user.name || "User"}
+                </span>
               </button>
 
               {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200">
+                <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200">
                   <Link
                     to="/profile"
-                      className="block px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
                   >
                     Profil Saya
                   </Link>
 
-                    <Link
-                      to="/tiket"
-                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
-                    >
-                      <Ticket className="w-4 h-4" /> Tiket Saya
-                    </Link>
+                  <Link
+                    to="/tiket"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
+                  >
+                    <Ticket className="w-4 h-4" /> Tiket Saya
+                  </Link>
 
                   <button
                     onClick={logout}
-                      className="w-full text-left px-4 py-2 hover:bg-red-200 text-sm text-red-600 transition"
+                    className="w-full text-left px-4 py-2 hover:bg-red-200 text-sm text-red-600 transition"
                   >
                     Logout
                   </button>

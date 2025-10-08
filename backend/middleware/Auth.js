@@ -9,17 +9,26 @@ function getJwtSecret() {
 }
 
 export const authenticate = (req, res, next) => {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith("Bearer ")) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
-  }
-  const token = auth.split(" ")[1];
-  const JWT_SECRET = getJwtSecret();
+  try {
+    const auth = req.headers.authorization;
+    if (!auth || !auth.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err)
-      return res.status(401).json({ success: false, message: "Invalid token" });
-    req.user = decoded;
-    next();
-  });
+    const token = auth.split(" ")[1];
+    const JWT_SECRET = getJwtSecret();
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Invalid token" });
+      }
+      req.user = decoded;
+      next();
+    });
+  } catch (err) {
+    console.error("Auth Middleware Error:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
 };
