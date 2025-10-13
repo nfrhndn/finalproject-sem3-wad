@@ -1,6 +1,6 @@
 const BASE_URL = "http://localhost:5000/api";
 const MOVIE_BASE_URL = `${BASE_URL}/movies`;
-const BOOKING_BASE_URL = `${BASE_URL}/booking`;
+const BOOKING_BASE_URL = `${BASE_URL}/bookings`;
 const CART_BASE_URL = `${BASE_URL}/cart`;
 const TICKET_BASE_URL = `${BASE_URL}/tickets`;
 
@@ -94,7 +94,7 @@ export const fetchUpcomingMovies = async () =>
   fetchWithAuth(`${MOVIE_BASE_URL}/upcoming`);
 
 export const bookingApi = async (order: any) =>
-  fetchWithAuth(`${BOOKING_BASE_URL}/checkout`, {
+  fetchWithAuth(`${BOOKING_BASE_URL}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(order),
@@ -120,7 +120,7 @@ export const updateCartApi = async (id: number, item: any) =>
   });
 
 export const checkoutApi = async (payload: any) =>
-  fetchWithAuth(`${CART_BASE_URL}/checkout`, {
+  fetchWithAuth(`${BASE_URL}/bookings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -172,4 +172,14 @@ export const uploadAvatarApi = async (file: File) => {
   return data.user?.avatar || data.avatar || data.path || "";
 };
 
-export const fetchTickets = async () => fetchWithAuth(`${TICKET_BASE_URL}`);
+export const fetchTickets = async () => {
+  try {
+    const data = await fetchWithAuth(`${BOOKING_BASE_URL}`);
+    return data;  
+  } catch (error) {
+    console.error("❌ Gagal fetch tiket:", error);
+    return { success: false, bookings: [] };
+  }
+};
+
+

@@ -18,6 +18,7 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json());
@@ -28,7 +29,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/movies", movieRoutes);
-app.use("/api/booking", bookingRoutes);
+app.use("/api/bookings", bookingRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/user", userRoutes);

@@ -111,24 +111,47 @@ const Cart = () => {
   ];
 
   const handlePayment = async () => {
-    if (selectedCartItems.length === 0 || !selectedPayment) return;
+  if (selectedCartItems.length === 0 || !selectedPayment) return;
 
-    try {
+  try {
+    for (const item of selectedCartItems) {
       const data = await checkoutApi({
-        items: selectedCartItems,
-        paymentMethod: selectedPayment,
+        movieId: item.movieId,
+        title: item.title,
+        poster: item.poster,
+        cinema: item.cinema,
+        date: item.date,
+        time: item.time,
+        seats: item.seats,
+        price: item.price,
+        total: item.total,
       });
 
-      if (data.success) {
-        alert("Pembayaran berhasil! Tiket sudah ditambahkan ke riwayat.");
-        setCart(cart.filter((item) => !selectedItems.includes(item.id)));
-        setSelectedItems([]);
-        navigate("/tiket");
+      console.log("Booking response:", data);
+
+      if (!data.success) {
+        alert(`Gagal booking ${item.title}: ${data.message}`);
+        return;
       }
-    } catch (error) {
-      console.error("Checkout gagal:", error);
+
+      await removeFromCartApi(item.id);
     }
-  };
+
+    alert("✅ Pembayaran berhasil! Terima Kasih.");
+
+    const updated = await getCartApi();
+    if (updated.success) {
+      setCart(updated.cart.reverse());
+    }
+
+    setSelectedItems([]);
+    navigate("/tiket");
+
+  } catch (error) {
+    console.error("Checkout gagal:", error);
+    alert("❌ Terjadi kesalahan saat memproses pembayaran.");
+  }
+};
 
   return (
     <div className="container mx-auto px-4 py-8">

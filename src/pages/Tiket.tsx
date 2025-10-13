@@ -20,16 +20,17 @@ const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w200";
 
 const Tiket = () => {
   const [tickets, setTickets] = useState<TicketItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadTickets = async () => {
       try {
         const res = await fetchTickets();
-        if (res.success && res.tickets) {
-          const sortedTickets = [...res.tickets].sort((a: any, b: any) => {
+        if (res.success && res.bookings) {
+          const sortedTickets = [...res.bookings].sort((a: any, b: any) => {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
-            return dateB - dateA;
+          return dateB - dateA;
           });
           setTickets(sortedTickets);
         } else {
@@ -38,6 +39,8 @@ const Tiket = () => {
       } catch (err) {
         console.error("Gagal memuat tiket:", err);
         setTickets([]);
+      } finally {
+        setLoading(false);
       }
     };
     loadTickets();
@@ -46,14 +49,10 @@ const Tiket = () => {
   const getStatus = (date: string, time: string) => {
     const now = new Date();
     const ticketDateTime = new Date(`${date}T${time}:00`);
-
-    if (ticketDateTime > now) {
-      return { label: "Aktif", color: "bg-green-500" };
-    } else if (ticketDateTime.toDateString() === now.toDateString() && ticketDateTime < now) {
+    if (ticketDateTime > now) return { label: "Aktif", color: "bg-green-500" };
+    if (ticketDateTime.toDateString() === now.toDateString() && ticketDateTime < now)
       return { label: "Sudah Digunakan", color: "bg-gray-400" };
-    } else {
-      return { label: "Kadaluarsa", color: "bg-red-500" };
-    }
+    return { label: "Kadaluarsa", color: "bg-red-500" };
   };
 
   const formatDate = (dateStr: string) => {
@@ -63,6 +62,12 @@ const Tiket = () => {
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
+
+  if (loading) {
+    return (
+      <div className="text-center text-gray-600 mt-10">Memuat tiket...</div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -79,17 +84,13 @@ const Tiket = () => {
             Belum ada tiket. Silakan lakukan pembayaran terlebih dahulu.
           </p>
         ) : (
-            tickets.map((item) => {
-              const status = getStatus(item.date, item.time);
-              return (
-                <div
-                  key={item.id}
+          tickets.map((item) => {
+            const status = getStatus(item.date, item.time);
+            return (
+              <div
+                key={item.id}
                 className="relative bg-white border border-gray-300 shadow-md flex gap-4 items-stretch px-5 py-6 overflow-hidden rounded-lg"
-                style={{
-                  clipPath:
-                    "path('M20 0 Hcalc(100% - 20px) C100% 20,100% 60,calc(100% - 20px) 80 H20 C0 60,0 20,20 0 Z')",
-                }}
-                >
+              >
                 <span
                   className={`absolute top-3 right-3 text-xs text-white px-3 py-1 rounded-full ${status.color}`}
                 >
