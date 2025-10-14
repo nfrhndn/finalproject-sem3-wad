@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -14,6 +15,7 @@ model User {
   password   String
   createdAt  DateTime  @default(now())
   bookings   Booking[]
+  profile    Profile?  @relation("UserProfile")
 }
 
 model Booking {
@@ -33,3 +35,18 @@ model Booking {
   user         User     @relation(fields: [userId], references: [id])
 }
 
+model Profile {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @unique
+
+  // Relasi balik, pakai nama relasi sama "UserProfile"
+  user          User      @relation("UserProfile", fields: [userId], references: [id])
+
+  fullName      String
+  language      String     @default("Bahasa Indonesia")
+  paymentMethod String?
+  avatar        String?
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}

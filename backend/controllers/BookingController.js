@@ -1,43 +1,50 @@
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import prisma from "../prismaClient.js";
+import { z } from "zod";
+
+const bookingSchema = z.object({
+  movieId: z.number({ required_error: "movieId wajib diisi" }).min(1),
+  title: z.string({ required_error: "title wajib diisi" }).min(1),
+  poster: z.string().nullable().optional(),
+  cinema: z.string({ required_error: "cinema wajib diisi" }).min(1),
+  date: z.string({ required_error: "date wajib diisi" }).min(4),
+  time: z.string({ required_error: "time wajib diisi" }).min(1),
+  seats: z
+    .array(z.string().min(1))
+    .nonempty({ message: "Minimal pilih 1 kursi" }),
+  price: z.number({ required_error: "price wajib diisi" }).positive(),
+  total: z.number({ required_error: "total wajib diisi" }).positive(),
+});
 
 export const createBooking = async (req, res) => {
   try {
-
+    console.log("📩 [DEBUG] Data diterima di /api/bookings:", req.body);
     const userId = req.user?.id;
+    console.log("👤 [DEBUG] userId:", userId);
+
     if (!userId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized (token tidak valid)" });
     }
 
-    const {
-      movieId,
-      title,
-      poster,
-      cinema,
-      date,
-      time,
-      seats,
-      price,
-      total,
-    } = req.body;
-
-    if (
-      !movieId ||
-      !title ||
-      !cinema ||
-      !date ||
-      !time ||
-      !seats ||
-      seats.length === 0
-    ) {
+    const parsed = bookingSchema.safeParse(req.body);
+    if (!parsed.success) {
+      console.log("❌ [ZOD ERROR] Detail:", parsed.error.issues);
       return res.status(400).json({
         success: false,
-        message: "❌ Data booking tidak lengkap",
+        message: parsed.error.issues[0]?.message || "Data booking tidak valid.",
       });
     }
 
-    const seatsString = JSON.stringify(seats);
+    const { movieId, title, poster, cinema, date, time, seats, price, total } =
+      parsed.data;
 
+    console.log("🧩 [DEBUG] Data setelah parsing:", parsed.data);
+
+    const seatsString = JSON.stringify(seats);
+    console.log("💺 [DEBUG] Seats stringified:", seatsString);
+
+    console.log("🔍 [DEBUG] Mengecek booking duplikat...");
     const duplicate = await prisma.booking.findFirst({
       where: {
         userId,
@@ -47,13 +54,18 @@ export const createBooking = async (req, res) => {
         seats: seatsString,
       },
     });
+    console.log("🧠 [DEBUG] Hasil cek duplikat:", duplicate);
+
     if (duplicate) {
+      console.log("⚠️ [DEBUG] Booking duplikat ditemukan");
       return res.status(400).json({
         success: false,
-        message: "❌ Booking dengan detail yang sama sudah ada di keranjang",
+        message:
+          "❌ Booking dengan detail yang sama sudah ada di keranjang kamu.",
       });
     }
 
+    console.log("💾 [DEBUG] Menyimpan booking ke database...");
     const newBooking = await prisma.booking.create({
       data: {
         userId,
@@ -69,16 +81,15 @@ export const createBooking = async (req, res) => {
       },
     });
 
+    console.log("✅ [DEBUG] Booking berhasil disimpan:", newBooking);
+
     return res.status(201).json({
       success: true,
-      message: "✅ Booking berhasil ditambahkan ke cart",
-      booking: {
-        ...newBooking,
-        seats, 
-      },
+      message: "✅ Booking berhasil ditambahkan ke cart.",
+      booking: { ...newBooking, seats },
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ [ERROR] createBooking gagal:", err);
     return res.status(500).json({
       success: false,
       message: "❌ Gagal membuat booking",
@@ -90,6 +101,12 @@ export const createBooking = async (req, res) => {
 export const getBookings = async (req, res) => {
   try {
     const userId = req.user?.id;
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized (token tidak valid)" });
+    }
+
     const bookings = await prisma.booking.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -105,7 +122,7 @@ export const getBookings = async (req, res) => {
       bookings: formattedBookings,
     });
   } catch (error) {
-    console.error("❌ Error getUserBookings:", error);
+    console.error("❌ getBookings error:", error);
     return res.status(500).json({
       success: false,
       message: "Gagal mengambil data tiket",
@@ -113,4 +130,3 @@ export const getBookings = async (req, res) => {
     });
   }
 };
-

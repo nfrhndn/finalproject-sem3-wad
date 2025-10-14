@@ -1,25 +1,45 @@
+import { z } from "zod";
+import prisma from "../prismaClient.js";
 import jwt from "jsonwebtoken";
-import { users } from "./AuthController.js";
 
-export const getProfile = (req, res) => {
+const updateProfileSchema = z.object({
+  fullName: z.string().min(2, "Nama minimal 2 karakter").optional(),
+  name: z.string().min(2, "Nama minimal 2 karakter").optional(),
+  newEmail: z.string().email("Format email tidak valid").optional(),
+  email: z.string().email("Format email tidak valid").optional(),
+  password: z.string().min(6, "Password minimal 6 karakter").optional(),
+  language: z.string().optional(),
+  paymentMethod: z.string().nullable().optional(),
+});
+
+export const getProfile = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
+    if (!token)
       return res
         .status(401)
         .json({ success: false, message: "Token tidak ditemukan" });
-    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = users.find((u) => u.email === decoded.email);
-    if (!user) {
+
+    const user = await prisma.user.findUnique({
+      where: { email: decoded.email },
+      include: { profile: true },
+    });
+
+    if (!user)
       return res
         .status(404)
         .json({ success: false, message: "User tidak ditemukan" });
-    }
 
-    const { password, ...safe } = user;
-    return res.json({ success: true, user: safe });
+    const { password, ...safeUser } = user;
+    return res.json({
+      success: true,
+      user: {
+        ...safeUser,
+        avatar: user.profile?.avatar || "",
+      },
+    });
   } catch (err) {
     console.error("GetProfile error:", err.message);
     return res.status(401).json({
@@ -29,33 +49,62 @@ export const getProfile = (req, res) => {
   }
 };
 
-export const updateProfile = (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
+    if (!token)
       return res
         .status(401)
         .json({ success: false, message: "Token tidak ditemukan" });
-    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { name, newEmail, password } = req.body;
 
-    const idx = users.findIndex((u) => u.email === decoded.email);
-    if (idx === -1) {
+    const parseResult = updateProfileSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const message = parseResult.error.errors[0].message;
+      return res.status(400).json({ success: false, message });
+    }
+
+    const data = parseResult.data;
+
+    const user = await prisma.user.findUnique({
+      where: { email: decoded.email },
+    });
+    if (!user)
       return res
         .status(404)
         .json({ success: false, message: "User tidak ditemukan" });
-    }
 
-    if (name) users[idx].name = name;
-    if (newEmail) users[idx].email = newEmail;
-    if (password) users[idx].password = password;
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: data.fullName || data.name || user.name,
+        email: data.newEmail || data.email || user.email,
+        password: data.password || user.password,
+      },
+    });
 
-    const { password: pw, ...safe } = users[idx];
+    const updatedProfile = await prisma.profile.upsert({
+      where: { userId: user.id },
+      update: {
+        fullName: data.fullName || data.name || updatedUser.name,
+        language: data.language || undefined,
+        paymentMethod: data.paymentMethod || undefined,
+      },
+      create: {
+        userId: user.id,
+        fullName: data.fullName || data.name || updatedUser.name,
+        language: data.language || "Bahasa Indonesia",
+        paymentMethod: data.paymentMethod || null,
+      },
+    });
+
+    const { password, ...safeUser } = updatedUser;
+
     return res.json({
       success: true,
-      user: safe,
+      user: safeUser,
+      profile: updatedProfile,
       message: "Profil berhasil diperbarui",
     });
   } catch (err) {
@@ -66,36 +115,58 @@ export const updateProfile = (req, res) => {
   }
 };
 
-export const uploadAvatar = (req, res) => {
+export const uploadAvatar = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
+    if (!token)
       return res
         .status(401)
         .json({ success: false, message: "Token tidak ditemukan" });
-    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const idx = users.findIndex((u) => u.email === decoded.email);
-    if (idx === -1) {
+    const user = await prisma.user.findUnique({
+      where: { email: decoded.email },
+    });
+
+    if (!user)
       return res
         .status(404)
         .json({ success: false, message: "User tidak ditemukan" });
-    }
 
-    if (!req.file) {
+    if (!req.file)
       return res
         .status(400)
         .json({ success: false, message: "File tidak ditemukan" });
+
+    if (!req.file.mimetype.startsWith("image/")) {
+      return res.status(400).json({
+        success: false,
+        message: "Hanya file gambar yang diperbolehkan",
+      });
     }
 
-    users[idx].avatar = `/uploads/${req.file.filename}`;
+    const filePath = `/uploads/${req.file.filename}`;
 
-    const { password, ...safe } = users[idx];
+    const profile = await prisma.profile.upsert({
+      where: { userId: user.id },
+      update: { avatar: filePath },
+      create: {
+        userId: user.id,
+        fullName: user.name || "",
+        avatar: filePath,
+        language: "Bahasa Indonesia",
+      },
+    });
+
+    const { password, ...safeUser } = user;
     return res.json({
       success: true,
-      user: safe,
       message: "Avatar berhasil diunggah",
+      user: {
+        ...safeUser,
+        avatar: filePath,
+      },
+      profile,
     });
   } catch (err) {
     console.error("UploadAvatar error:", err.message);

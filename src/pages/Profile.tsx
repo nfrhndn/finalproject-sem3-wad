@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  User,
   CreditCard,
   Globe,
   Shield,
@@ -14,6 +13,7 @@ import {
   X,
   ChevronDown,
 } from "lucide-react";
+import { User as UserIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
   fetchProfileApi,
@@ -49,30 +49,41 @@ const Profile = () => {
     const loadProfile = async () => {
       try {
         const res = await fetchProfileApi(storedToken);
+        const avatarUrl = res.user?.avatar
+          ? `${BASE_URL}${res.user.avatar}`
+          : "";
+
         setFormData({
-          avatar: res.user?.avatar || "",
+          avatar: avatarUrl,
           name: res.user?.name || "",
           email: res.user?.email || "",
           password: "",
         });
 
-        setUser((prev) =>
-          prev
-            ? {
-                ...prev,
-                name: res.user?.name,
-                email: res.user?.email,
-                avatar: res.user?.avatar,
-              }
-            : res.user
+        setUser({
+          id: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+          avatar: avatarUrl,
+        });
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: res.user.id,
+            name: res.user.name,
+            email: res.user.email,
+            avatar: avatarUrl,
+          })
         );
       } catch (err: any) {
         console.error("Gagal ambil profil:", err.message || err);
       }
     };
-
-    loadProfile();
-  }, []);
+    if (token || localStorage.getItem("token")) {
+      loadProfile();
+    }
+  }, [token, setUser]);
 
   const getInitials = (name: string) => {
     const names = name.trim().split(" ");
@@ -87,20 +98,29 @@ const Profile = () => {
       const upload = async () => {
         try {
           const file = files[0];
-          const avatarPath = await uploadAvatarApi(file);
-          const refreshed = await fetchProfileApi(token || "");
 
-          setFormData({
-            avatar: refreshed.user.avatar || avatarPath,
-            name: refreshed.user.name || formData.name,
-            email: refreshed.user.email || formData.email,
-            password: "",
-          });
+          const avatarPath = await uploadAvatarApi(file);
+
+          const avatarUrl = avatarPath.startsWith("http")
+            ? avatarPath
+            : `${BASE_URL}${avatarPath}`;
+
+          setFormData((prev) => ({ ...prev, avatar: avatarUrl }));
 
           setUser((prev) =>
             prev
-              ? { ...prev, avatar: refreshed.user.avatar || avatarPath }
-              : refreshed.user
+              ? { ...prev, avatar: avatarUrl }
+              : {
+                  id: user?.id || 0,
+                  name: user?.name || "",
+                  email: user?.email || "",
+                  avatar: avatarUrl,
+                }
+          );
+
+          localStorage.setItem(
+            "user",
+            JSON.stringify({ ...user, avatar: avatarUrl })
           );
 
           alert("✅ Foto profil berhasil diperbarui!");
@@ -118,28 +138,47 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       const payload = {
-        name: formData.name,
+        fullName: formData.name,
         newEmail: formData.email,
         password: formData.password,
       };
 
       const updated = await updateProfileApi(payload, token || "");
 
-      setFormData((prev) => ({
-        ...prev,
-        name: updated.user.name,
-        email: updated.user.email,
-        password: "",
-      }));
+      if (updated?.user || updated?.name) {
+        const updatedUser = updated.user || updated;
 
-      setUser((prev) =>
-        prev
-          ? { ...prev, name: updated.user.name, email: updated.user.email }
-          : updated.user
-      );
+        setFormData((prev) => ({
+          ...prev,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          password: "",
+        }));
 
-      setIsEditing(false);
-      alert("✅ Profil berhasil diperbarui!");
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                name: updatedUser.name,
+                email: updatedUser.email,
+              }
+            : updatedUser
+        );
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...user,
+            name: updatedUser.name,
+            email: updatedUser.email,
+          })
+        );
+
+        setIsEditing(false);
+        alert("✅ Profil berhasil diperbarui!");
+      } else {
+        alert("❌ Gagal memperbarui profil (data tidak valid)");
+      }
     } catch (err) {
       console.error(err);
       alert("❌ Gagal memperbarui profil");
@@ -153,13 +192,13 @@ const Profile = () => {
       await updateProfileApi({ avatar: "" }, token || "");
       setFormData((prev) => ({ ...prev, avatar: "" }));
       setUser((prev) => (prev ? { ...prev, avatar: "" } : prev));
+      localStorage.setItem("user", JSON.stringify({ ...user, avatar: "" }));
       alert("🗑️ Foto profil berhasil dihapus.");
     } catch (err) {
       console.error(err);
       alert("❌ Gagal menghapus avatar");
     }
   };
-
   const paymentOptions = [
     {
       category: "Bank",
@@ -216,7 +255,7 @@ const Profile = () => {
     <div className="min-h-screen bg-gradient-to-b from-white to-cyan-50 flex flex-col items-center py-10 px-4">
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2">
-          <User className="text-cyan-700" size={28} />
+          <UserIcon className="text-cyan-700" size={28} />
           <h1 className="text-3xl font-bold text-cyan-700">Informasi Profil</h1>
         </div>
       </div>
@@ -231,12 +270,9 @@ const Profile = () => {
                     formData.avatar
                       ? formData.avatar.startsWith("http")
                         ? formData.avatar
-                        : formData.avatar.includes("/uploads/")
-                        ? `${BASE_URL}${formData.avatar.replace(/^\/?/, "/")}`
-                        : `${BASE_URL}/uploads/${formData.avatar.replace(
-                            /^\/?/,
-                            ""
-                          )}`
+                        : `${BASE_URL}${
+                            formData.avatar.startsWith("/") ? "" : "/"
+                          }${formData.avatar}`
                       : "/default-avatar.png"
                   }
                   alt="avatar"

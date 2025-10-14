@@ -20,21 +20,21 @@ function logoutUser() {
 }
 
 function getValidToken(): string | null {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
+  const storedToken = localStorage.getItem("token");
+  if (!storedToken) return null;
 
-  if (isTokenExpired(token)) {
+  if (isTokenExpired(storedToken)) {
     logoutUser();
     return null;
   }
-  return token;
+  return storedToken;
 }
 
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  const token = getValidToken();
+  const currentToken = getValidToken();
   const headers = {
     ...(options.headers || {}),
-    Authorization: token ? `Bearer ${token}` : "",
+    Authorization: currentToken ? `Bearer ${currentToken}` : "",
   };
 
   try {
@@ -101,17 +101,14 @@ export const bookingApi = async (order: any) =>
   });
 
 export const getCartApi = async () => fetchWithAuth(`${CART_BASE_URL}`);
-
 export const addToCart = async (item: any) =>
   fetchWithAuth(`${CART_BASE_URL}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(item),
   });
-
 export const removeFromCartApi = async (id: number) =>
   fetchWithAuth(`${CART_BASE_URL}/${id}`, { method: "DELETE" });
-
 export const updateCartApi = async (id: number, item: any) =>
   fetchWithAuth(`${CART_BASE_URL}/${id}`, {
     method: "PUT",
@@ -126,17 +123,15 @@ export const checkoutApi = async (payload: any) =>
     body: JSON.stringify(payload),
   });
 
-export const fetchProfileApi = async (token?: string) => {
-  const t = token || localStorage.getItem("token");
+export const fetchProfileApi = async (userToken?: string) => {
+  const t = userToken || localStorage.getItem("token");
   return fetchWithAuth(`${BASE_URL}/user/profile`, {
-    headers: {
-      Authorization: `Bearer ${t}`,
-    },
+    headers: { Authorization: `Bearer ${t}` },
   });
 };
 
-export const updateProfileApi = async (payload: any, token?: string) => {
-  const t = token || localStorage.getItem("token");
+export const updateProfileApi = async (payload: any, userToken?: string) => {
+  const t = userToken || localStorage.getItem("token");
   return fetchWithAuth(`${BASE_URL}/user/profile`, {
     method: "PUT",
     headers: {
@@ -148,8 +143,8 @@ export const updateProfileApi = async (payload: any, token?: string) => {
 };
 
 export const uploadAvatarApi = async (file: File) => {
-  const token = localStorage.getItem("token");
-  if (!token) throw new Error("Token tidak ditemukan");
+  const storedToken = localStorage.getItem("token");
+  if (!storedToken) throw new Error("Token tidak ditemukan");
 
   const formData = new FormData();
   formData.append("avatar", file);
@@ -157,29 +152,29 @@ export const uploadAvatarApi = async (file: File) => {
   const res = await fetch(`${BASE_URL}/user/profile/avatar`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${storedToken}`,
     },
     body: formData,
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Upload gagal: ${err}`);
+    const errText = await res.text();
+    console.error("❌ Upload avatar gagal:", errText);
+    throw new Error("Upload avatar gagal");
   }
 
   const data = await res.json();
+  console.log("✅ Avatar upload success:", data);
 
-  return data.user?.avatar || data.avatar || data.path || "";
+  return data.avatar || data.path || data.user?.avatar || "";
 };
 
 export const fetchTickets = async () => {
   try {
     const data = await fetchWithAuth(`${BOOKING_BASE_URL}`);
-    return data;  
+    return data;
   } catch (error) {
     console.error("❌ Gagal fetch tiket:", error);
     return { success: false, bookings: [] };
   }
 };
-
-
