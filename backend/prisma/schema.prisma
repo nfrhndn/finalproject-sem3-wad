@@ -13,10 +13,21 @@ model User {
   name       String
   email      String    @unique
   password   String
+  role       String    @default("USER")
   createdAt  DateTime  @default(now())
   bookings   Booking[]
   profile    Profile?  @relation("UserProfile")
 }
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 
 model Booking {
   id           Int      @id @default(autoincrement())
@@ -31,22 +42,33 @@ model Booking {
   price        Float
   total        Float
   createdAt    DateTime @default(now())
-
   user         User     @relation(fields: [userId], references: [id])
 }
 
 model Profile {
   id            Int       @id @default(autoincrement())
   userId        Int       @unique
-
-  // Relasi balik, pakai nama relasi sama "UserProfile"
   user          User      @relation("UserProfile", fields: [userId], references: [id])
-
   fullName      String
   language      String     @default("Bahasa Indonesia")
   paymentMethod String?
   avatar        String?
-
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+}
+
+model Movie {
+  id           Int       @id @default(autoincrement())
+  tmdbId       Int?      @unique
+  title        String
+  description  String?   @default("Deskripsi tidak tersedia.")
+  genre        String?   @default("Tidak diketahui")
+  duration     Int?
+  releaseDate  DateTime?
+  posterUrl    String?
+  status       String?
+  source       String?   @default("TMDB")
+  isPublished  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

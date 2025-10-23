@@ -37,8 +37,8 @@ const MoviesSlider: React.FC<MoviesSliderProps> = ({
       <Swiper
         modules={[Navigation]}
         navigation={{
-          nextEl: ".swiper-button-next-custom",
-          prevEl: ".swiper-button-prev-custom",
+          nextEl: ".movieslider-button-next",
+          prevEl: ".movieslider-button-prev",
         }}
         loop={true}
         spaceBetween={20}
@@ -62,10 +62,11 @@ const MoviesSlider: React.FC<MoviesSliderProps> = ({
         ))}
       </Swiper>
 
-      <button className="swiper-button-prev-custom absolute top-1/2 -left-12 z-10 border-2 border-cyan-600 text-cyan-600 rounded-full w-12 h-12 flex items-center justify-center hover:bg-cyan-600 hover:text-white transition transform -translate-y-1/2 text-2xl font-bold">
+      {/* Tombol navigasi MOVIESLIDER */}
+      <button className="movieslider-button-prev absolute top-1/2 -left-12 z-10 border-2 border-cyan-600 text-cyan-600 rounded-full w-12 h-12 flex items-center justify-center hover:bg-cyan-600 hover:text-white transition transform -translate-y-1/2 text-2xl font-bold">
         ←
       </button>
-      <button className="swiper-button-next-custom absolute top-1/2 -right-12 z-10 border-2 border-cyan-600 text-cyan-600 rounded-full w-12 h-12 flex items-center justify-center hover:bg-cyan-600 hover:text-white transition transform -translate-y-1/2 text-2xl font-bold">
+      <button className="movieslider-button-next absolute top-1/2 -right-12 z-10 border-2 border-cyan-600 text-cyan-600 rounded-full w-12 h-12 flex items-center justify-center hover:bg-cyan-600 hover:text-white transition transform -translate-y-1/2 text-2xl font-bold">
         →
       </button>
     </section>

@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { Star, Clock, Film, Ticket, Play } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
-import { fetchPopularMovies, fetchMovieDetail } from "../Services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import TrailerModal from "./TrailerModal";
+import { fetchMovieDetail } from "../Services/api";
+
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+const BASE_URL = "https://api.themoviedb.org/3";
 
 const Hero: React.FC = () => {
   const [movies, setMovies] = useState<any[]>([]);
@@ -16,26 +19,43 @@ const Hero: React.FC = () => {
   useEffect(() => {
     const loadMovies = async () => {
       try {
-        const data = await fetchPopularMovies();
-        const uniqueGenres: any[] = [];
-        const uniqueMovies = data.results.filter((movie: any) => {
-          if (!movie.genre_ids) return false;
-          const genre = movie.genre_ids[0];
-          if (uniqueGenres.includes(genre)) return false;
-          uniqueGenres.push(genre);
+        // 🎬 Ambil film populer versi Bahasa Indonesia langsung dari TMDB
+        const res = await fetch(
+          `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=id-ID&page=1`
+        );
+        const data = await res.json();
+
+        // 🎯 Filter film: harus punya sinopsis & genre unik
+        const uniqueGenres: number[] = [];
+        const filteredMovies = data.results.filter((movie: any) => {
+          if (
+            !movie.genre_ids ||
+            movie.genre_ids.length === 0 ||
+            !movie.overview ||
+            movie.overview.trim() === ""
+          ) {
+            return false;
+          }
+          const mainGenre = movie.genre_ids[0];
+          if (uniqueGenres.includes(mainGenre)) return false;
+          uniqueGenres.push(mainGenre);
           return true;
         });
+
+        // 🔍 Ambil detail tiap film (untuk runtime & genre lengkap)
         const movieDetails = await Promise.all(
-          uniqueMovies.slice(0, 5).map(async (m: any) => {
+          filteredMovies.slice(0, 6).map(async (m: any) => {
             const detail = await fetchMovieDetail(m.id);
             return { ...m, detail };
           })
         );
+
         setMovies(movieDetails);
       } catch (error) {
         console.error("Gagal mengambil data film:", error);
       }
     };
+
     loadMovies();
   }, []);
 
@@ -43,7 +63,7 @@ const Hero: React.FC = () => {
     if (!minutes) return "N/A";
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return `${h}h ${m}m`;
+    return `${h}j ${m}m`;
   };
 
   const handlePesan = (id: number) => {
@@ -65,11 +85,11 @@ const Hero: React.FC = () => {
       <Swiper
         modules={[Autoplay, Navigation]}
         navigation={{
-          nextEl: ".swiper-button-next-custom",
-          prevEl: ".swiper-button-prev-custom",
+          nextEl: ".hero-button-next",
+          prevEl: ".hero-button-prev",
         }}
         autoplay={{ delay: 6000, disableOnInteraction: false }}
-        loop
+        loop={movies.length > 3} // ✅ Hanya aktif kalau film cukup banyak
         className="h-full"
       >
         {movies.map((movie) => (
@@ -83,30 +103,35 @@ const Hero: React.FC = () => {
                   backgroundSize: "110%",
                 }}
               ></div>
-              <div className="relative z-10 max-w-2xl text-white px-10 md:px-20">
+
+              <div className="relative z-10 max-w-2xl text-white px-10 md:px-20 overflow-y-auto max-h-[60vh]">
                 <h1 className="text-4xl md:text-5xl font-bold mb-3">
                   {movie.title}
                 </h1>
+
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <div className="flex items-center bg-cyan-600 px-2 py-1 rounded-full text-sm">
-                    <Star className="w-4 h-4 mr-1" />{" "}
+                    <Star className="w-4 h-4 mr-1" />
                     {movie.vote_average.toFixed(1)}
                   </div>
                   <div className="flex items-center bg-white/20 px-2 py-1 rounded-full text-sm">
-                    <Clock className="w-4 h-4 mr-1" />{" "}
+                    <Clock className="w-4 h-4 mr-1" />
                     {formatDuration(movie.detail?.runtime)}
                   </div>
                   <div className="flex items-center bg-white/20 px-2 py-1 rounded-full text-sm">
-                    <Film className="w-4 h-4 mr-1" />{" "}
+                    <Film className="w-4 h-4 mr-1" />
                     {movie.detail?.genres
                       ?.map((g: any) => g.name)
                       .slice(0, 2)
                       .join(", ")}
                   </div>
                 </div>
-                <p className="text-gray-200 mb-6 text-sm md:text-base line-clamp-3">
-                  {movie.overview}
+
+                {/* 🎯 Sinopsis penuh versi Bahasa Indonesia */}
+                <p className="text-gray-200 mb-6 text-sm md:text-base whitespace-pre-line">
+                  {movie.overview || "Sinopsis tidak tersedia."}
                 </p>
+
                 <div className="flex gap-4">
                   <button
                     onClick={() => handlePesan(movie.id)}
@@ -127,7 +152,8 @@ const Hero: React.FC = () => {
         ))}
       </Swiper>
 
-      <button className="swiper-button-prev-custom absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg">
+      {/* Tombol Navigasi unik */}
+      <button className="hero-button-prev absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -140,7 +166,7 @@ const Hero: React.FC = () => {
         </svg>
       </button>
 
-      <button className="swiper-button-next-custom absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg">
+      <button className="hero-button-next absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

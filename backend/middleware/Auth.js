@@ -16,6 +16,7 @@ function getJwtSecret() {
   return JWT_SECRET;
 }
 
+// ✅ Cek token valid
 export const authenticate = (req, res, next) => {
   try {
     const auth = req.headers.authorization;
@@ -40,6 +41,7 @@ export const authenticate = (req, res, next) => {
           message: "Token tidak valid atau sudah kadaluarsa",
         });
       }
+
       req.user = decoded;
       next();
     });
@@ -50,4 +52,15 @@ export const authenticate = (req, res, next) => {
       message: "Terjadi kesalahan pada server (auth middleware)",
     });
   }
+};
+
+// ✅ Cek role admin (case-insensitive)
+export const authorizeAdmin = (req, res, next) => {
+  if (!req.user || req.user.role?.toLowerCase() !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Akses ditolak. Hanya admin yang boleh mengakses fitur ini.",
+    });
+  }
+  next();
 };

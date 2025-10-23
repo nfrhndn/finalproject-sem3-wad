@@ -12,11 +12,11 @@ import bookingRoutes from "./routes/BookingRoute.js";
 import cartRoutes from "./routes/CartRoute.js";
 import ticketRoutes from "./routes/TicketRoute.js";
 import userRoutes from "./routes/UserRoute.js";
+import adminRoutes from "./routes/AdminRoute.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// 🧩 Cek koneksi ke database
 async function testDB() {
   try {
     await prisma.$connect();
@@ -27,7 +27,6 @@ async function testDB() {
 }
 testDB();
 
-// 🧩 CORS (pastikan sesuai dengan alamat frontend)
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -37,23 +36,20 @@ app.use(
 );
 
 app.use(express.json());
-
-// ✅ Tambahkan middleware untuk serve folder "uploads"
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.get("/", (req, res) => {
   res.send("✅ Backend CinemaPlus is running. Use /api/movies or /api/auth");
 });
 
-// 🔗 Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/admin", adminRoutes);
 
-// 🧱 Global error handler
 app.use((err, req, res, next) => {
   console.error("🔥 Unexpected Error:", err.stack || err);
   res.status(500).json({ error: "Something went wrong on the server" });
