@@ -1,100 +1,71 @@
-import { Edit, Trash2 } from "lucide-react";
-import type { AdminMovie } from "../../types/AdminMovie";
+import { SquarePenIcon, Trash2 } from "lucide-react";
 
-interface MovieTableProps {
-    movies: AdminMovie[];
-    handleEdit: (movie: AdminMovie) => void;
-    handleDelete: (movie: AdminMovie) => void;
-}
-
-export default function MovieTable({
-    movies,
-    handleEdit,
-    handleDelete,
-}: MovieTableProps) {
+export default function MovieTable({ movies, selected, toggleSelect, openEditModal }: any) {
     return (
-        <div className="overflow-x-auto bg-white rounded-xl shadow-md">
-            <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-100 text-gray-700 uppercase text-sm">
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-gray-50 text-gray-700 border-b border-gray-200">
                     <tr>
+                        <th className="p-3"><input type="checkbox" /></th>
                         <th className="p-3">Poster</th>
                         <th className="p-3">Judul</th>
                         <th className="p-3">Genre</th>
-                        <th className="p-3">Rilis</th>
+                        <th className="p-3">Deskripsi</th>
+                        <th className="p-3">Tanggal Rilis</th>
                         <th className="p-3">Status</th>
-                        <th className="p-3">Sumber</th>
-                        <th className="p-3 text-center">Aksi</th>
+                        <th className="p-3 text-right">Aksi</th>
                     </tr>
                 </thead>
-
                 <tbody>
-                    {movies.map((movie, index) => (
+                    {movies.map((movie: any) => (
                         <tr
-                            key={`${movie.source || "unknown"}-${movie.id}-${index}`}
-                            className="border-b hover:bg-gray-50 transition"
+                            key={movie.id}
+                            className={`border-t border-gray-200 hover:bg-cyan-50 transition ${selected.includes(movie.id) ? "bg-cyan-100" : ""}`}
                         >
                             <td className="p-3">
-                                {movie.poster ? (
-                                    <img
-                                        src={movie.poster}
-                                        alt={movie.title}
-                                        className="w-16 h-20 object-cover rounded shadow-sm"
-                                    />
-                                ) : (
-                                    <div className="w-16 h-20 bg-gray-200 rounded" />
+                                <input
+                                    type="checkbox"
+                                    checked={selected.includes(movie.id)}
+                                    onChange={() => toggleSelect(movie.id)}
+                                />
+                            </td>
+                            <td className="p-3 text-gray-500">Poster</td>
+                            <td className="p-3 font-medium text-gray-800">{movie.title}</td>
+                            <td className="p-3">
+                                <div className="flex gap-1 flex-wrap">
+                                    {movie.genres.map((genre: string) => (
+                                        <span key={genre} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-md">{genre}</span>
+                                    ))}
+                                </div>
+                            </td>
+                            <td className="p-3 text-gray-600 max-w-xs truncate">{movie.description}</td>
+                            <td className="p-3">{movie.releaseDate}</td>
+                            <td className="p-3">
+                                {movie.status === "Sedang Tayang" && (
+                                    <span className="bg-cyan-500 text-white text-xs px-2 py-1 rounded-md">Sedang Tayang</span>
+                                )}
+                                {movie.status === "Akan Tayang" && (
+                                    <span className="bg-cyan-200 text-cyan-800 text-xs px-2 py-1 rounded-md">Akan Tayang</span>
+                                )}
+                                {movie.status === "Tidak Tayang" && (
+                                    <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-md">Tidak Tayang</span>
                                 )}
                             </td>
-                            <td className="p-3 font-medium text-gray-800">{movie.title}</td>
-                            <td className="p-3">{movie.genre || "-"}</td>
-                            <td className="p-3">{movie.releaseDate || "-"}</td>
-                            <td className="p-3">
-                                <span
-                                    className={`px-2 py-1 rounded text-white ${movie.status === "Sedang Tayang"
-                                        ? "bg-green-600"
-                                        : "bg-yellow-600"
-                                        }`}
-                                >
-                                    {movie.status}
-                                </span>
-                            </td>
-                            <td className="p-3">
-                                <span
-                                    className={`px-2 py-1 rounded text-xs ${movie.source === "manual"
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-gray-100 text-gray-800"
-                                        }`}
-                                >
-                                    {movie.source === "manual" ? "Manual" : "TMDB"}
-                                </span>
-                            </td>
-                            <td className="p-3 text-center">
-                                <div className="flex justify-center gap-2">
+                            <td className="p-3 text-right flex justify-end gap-3">
+                                {movie.status !== "Tidak Tayang" && (
                                     <button
-                                        onClick={() => handleEdit(movie)}
-                                        className="p-2 rounded bg-yellow-500 text-white hover:bg-yellow-600"
-                                        title="Edit Film"
+                                        onClick={() => openEditModal(movie)}
+                                        className="text-gray-500 hover:text-cyan-600 transition"
                                     >
-                                        <Edit size={16} />
+                                        <SquarePenIcon size={16} />
                                     </button>
-                                    <button
-                                        onClick={() => handleDelete(movie)}
-                                        className="p-2 rounded bg-red-500 text-white hover:bg-red-600"
-                                        title="Hapus Film"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
+                                )}
+                                <button className="text-red-500 hover:text-red-600 transition">
+                                    <Trash2 size={16} />
+                                </button>
                             </td>
                         </tr>
                     ))}
-
-                    {movies.length === 0 && (
-                        <tr>
-                            <td colSpan={7} className="p-4 text-center text-gray-500">
-                                Belum ada data film
-                            </td>
-                        </tr>
-                    )}
                 </tbody>
             </table>
         </div>

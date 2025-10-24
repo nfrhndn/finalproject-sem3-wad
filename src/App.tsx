@@ -14,21 +14,18 @@ import Tiket from "./pages/Tiket";
 import Profile from "./pages/Profile";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AddMovie from "./pages/admin/AddMovie";
-import EditMovie from "./pages/admin/EditMovie";
+import ManageMovies from "./pages/admin/ManageMovies";
 import ManageTickets from "./pages/admin/ManageTickets";
 import ManageUsers from "./pages/admin/ManageUsers";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminLogin from "./pages/admin/AdminLogin";
 
-// ✅ Import proteksi admin
 import AdminRoute from "./components/AdminRoute";
 
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Tambahkan "/admin/login" ke daftar halaman autentikasi
   const isAuthPage = ["/login", "/register", "/admin/login"].includes(location.pathname);
   const isAdminPage = location.pathname.startsWith("/admin");
   const hideLayout = isAuthPage || isAdminPage;
@@ -43,7 +40,7 @@ const App = () => {
           : "bg-white"
           }`}
       >
-        {/* Tombol kembali di halaman login/register/admin-login */}
+
         {isAuthPage && (
           <button
             onClick={() => navigate(-1)}
@@ -55,7 +52,6 @@ const App = () => {
         )}
 
         <Routes>
-          {/* ================= USER ROUTES ================= */}
           <Route path="/" element={<Home />} />
           <Route path="/film" element={<Film />} />
           <Route path="/film/:id" element={<Film />} />
@@ -67,10 +63,8 @@ const App = () => {
           <Route path="/tiket" element={<Tiket />} />
           <Route path="/profile" element={<Profile />} />
 
-          {/* ================= ADMIN LOGIN (tanpa proteksi) ================= */}
           <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* ================= ADMIN ROUTES (dilindungi) ================= */}
           <Route
             path="/admin/*"
             element={
@@ -80,13 +74,11 @@ const App = () => {
             }
           >
             <Route index element={<AdminDashboard />} />
-            <Route path="movies/add" element={<AddMovie />} />
-            <Route path="movies/edit/:id" element={<EditMovie />} />
+            <Route path="movies" element={<ManageMovies />} />  
             <Route path="tickets" element={<ManageTickets />} />
             <Route path="users" element={<ManageUsers />} />
           </Route>
 
-          {/* ================= FALLBACK ================= */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

@@ -9,7 +9,6 @@ type AdminRouteProps = {
 export default function AdminRoute({ children }: AdminRouteProps) {
     const { user, token, loading } = useAuth();
 
-    // ⏳ Saat masih loading → jangan redirect dulu
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen">
