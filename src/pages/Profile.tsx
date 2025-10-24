@@ -16,12 +16,12 @@ import {
 import { User as UserIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
+  BASE_API_URL,
+  BASE_STATIC_URL,
   fetchProfileApi,
   updateProfileApi,
   uploadAvatarApi,
 } from "../Services/api";
-
-const BASE_URL = "http://localhost:5000";
 
 const Profile = () => {
   const { user, token, setUser } = useAuth();
@@ -39,57 +39,62 @@ const Profile = () => {
   const [selectedLanguage, setSelectedLanguage] =
     useState<string>("Bahasa Indonesia");
 
+  const getInitials = (name: string) => {
+    const names = name.trim().split(" ");
+    if (names.length === 1) return names[0][0].toUpperCase();
+    return (names[0][0] + names[1][0]).toUpperCase();
+  };
+
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (!storedToken) {
+    const currentToken = token || localStorage.getItem("token");
+    if (!currentToken) {
       console.warn("Token tidak ditemukan");
       return;
     }
 
     const loadProfile = async () => {
       try {
-        const res = await fetchProfileApi(storedToken);
-        const avatarUrl = res.user?.avatar
-          ? `${BASE_URL}${res.user.avatar}`
-          : "";
+        const res = await fetchProfileApi(currentToken);
+        const userData = res.user || res;
+
+        const avatarUrl = userData.avatar
+          ? userData.avatar.startsWith("http")
+            ? userData.avatar
+            : `${BASE_STATIC_URL}${userData.avatar}`
+          : "/default-avatar.png";
 
         setFormData({
           avatar: avatarUrl,
-          name: res.user?.name || "",
-          email: res.user?.email || "",
+          name: userData.name || "",
+          email: userData.email || "",
           password: "",
         });
 
         setUser({
-          id: res.user.id,
-          name: res.user.name,
-          email: res.user.email,
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
           avatar: avatarUrl,
         });
 
         localStorage.setItem(
           "user",
           JSON.stringify({
-            id: res.user.id,
-            name: res.user.name,
-            email: res.user.email,
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
             avatar: avatarUrl,
           })
         );
+
+        console.log("✅ Profil berhasil dimuat:", userData);
       } catch (err: any) {
-        console.error("Gagal ambil profil:", err.message || err);
+        console.error("❌ Gagal ambil profil:", err.message || err);
       }
     };
-    if (token || localStorage.getItem("token")) {
-      loadProfile();
-    }
-  }, [token, setUser]);
 
-  const getInitials = (name: string) => {
-    const names = name.trim().split(" ");
-    if (names.length === 1) return names[0][0].toUpperCase();
-    return (names[0][0] + names[1][0]).toUpperCase();
-  };
+    loadProfile();
+  }, [token, setUser]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
@@ -99,11 +104,20 @@ const Profile = () => {
         try {
           const file = files[0];
 
-          const avatarPath = await uploadAvatarApi(file);
+          const currentToken = token || localStorage.getItem("token");
+          if (!currentToken) {
+            alert("⚠️ Token tidak ditemukan, silakan login ulang.");
+            return;
+          }
+
+          console.log("📤 Mengupload avatar:", file.name);
+          const avatarPath = await uploadAvatarApi(file, currentToken);
 
           const avatarUrl = avatarPath.startsWith("http")
             ? avatarPath
-            : `${BASE_URL}${avatarPath}`;
+            : `${BASE_STATIC_URL}${avatarPath}`;
+
+          console.log("✅ Avatar berhasil diupload:", avatarUrl);
 
           setFormData((prev) => ({ ...prev, avatar: avatarUrl }));
 
@@ -118,17 +132,22 @@ const Profile = () => {
                 }
           );
 
+          const storedUser = localStorage.getItem("user");
+          const userObj = storedUser ? JSON.parse(storedUser) : {};
           localStorage.setItem(
             "user",
-            JSON.stringify({ ...user, avatar: avatarUrl })
+            JSON.stringify({ ...userObj, avatar: avatarUrl })
           );
 
           alert("✅ Foto profil berhasil diperbarui!");
-        } catch (err) {
-          console.error("Gagal upload avatar:", err);
-          alert("❌ Upload avatar gagal");
+        } catch (err: any) {
+          console.error("❌ Gagal upload avatar:", err);
+          alert(
+            `❌ Upload avatar gagal: ${err.message || "Terjadi kesalahan"}`
+          );
         }
       };
+
       upload();
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -137,16 +156,16 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      const payload = {
-        fullName: formData.name,
-        newEmail: formData.email,
-        password: formData.password,
-      };
+      const payload: any = {};
+      if (formData.name) payload.name = formData.name;
+      if (formData.email) payload.email = formData.email;
+      if (formData.password) payload.password = formData.password;
 
       const updated = await updateProfileApi(payload, token || "");
 
       if (updated?.user || updated?.name) {
         const updatedUser = updated.user || updated;
+        console.log("Response update:", updated);
 
         setFormData((prev) => ({
           ...prev,
@@ -270,9 +289,7 @@ const Profile = () => {
                     formData.avatar
                       ? formData.avatar.startsWith("http")
                         ? formData.avatar
-                        : `${BASE_URL}${
-                            formData.avatar.startsWith("/") ? "" : "/"
-                          }${formData.avatar}`
+                        : `${BASE_STATIC_URL}${formData.avatar}`
                       : "/default-avatar.png"
                   }
                   alt="avatar"

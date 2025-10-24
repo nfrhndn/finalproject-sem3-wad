@@ -24,14 +24,18 @@ export const register = async (req, res) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ success: false, message: parsed.error.issues[0].message });
+      return res
+        .status(400)
+        .json({ success: false, message: parsed.error.issues[0].message });
     }
 
     const { name, email, password } = parsed.data;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "Email sudah terdaftar." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email sudah terdaftar." });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -64,7 +68,12 @@ export const register = async (req, res) => {
     });
   } catch (err) {
     console.error("Register Error:", err);
-    res.status(500).json({ success: false, message: "Terjadi kesalahan server saat register." });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Terjadi kesalahan server saat register.",
+      });
   }
 };
 
@@ -72,23 +81,30 @@ export const login = async (req, res) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ success: false, message: parsed.error.issues[0].message });
+      return res
+        .status(400)
+        .json({ success: false, message: parsed.error.issues[0].message });
     }
 
     const { email, password } = parsed.data;
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) return res.status(401).json({ success: false, message: "Email atau password salah." });
+    if (!user)
+      return res
+        .status(401)
+        .json({ success: false, message: "Email atau password salah." });
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
-      return res.status(401).json({ success: false, message: "Email atau password salah." });
+      return res
+        .status(401)
+        .json({ success: false, message: "Email atau password salah." });
 
     const JWT_SECRET = getJwtSecret();
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "9h" }
     );
 
     return res.json({
@@ -105,7 +121,12 @@ export const login = async (req, res) => {
     });
   } catch (err) {
     console.error("Login Error:", err);
-    res.status(500).json({ success: false, message: "Terjadi kesalahan server saat login." });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Terjadi kesalahan server saat login.",
+      });
   }
 };
 
@@ -113,7 +134,9 @@ export const verifyToken = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader)
-      return res.status(401).json({ success: false, message: "Token tidak ditemukan" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Token tidak ditemukan" });
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -123,7 +146,9 @@ export const verifyToken = async (req, res) => {
     });
 
     if (!user)
-      return res.status(404).json({ success: false, message: "User tidak ditemukan" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User tidak ditemukan" });
 
     return res.json({
       success: true,
@@ -137,6 +162,11 @@ export const verifyToken = async (req, res) => {
     });
   } catch (err) {
     console.error("VerifyToken error:", err.message);
-    return res.status(401).json({ success: false, message: "Token tidak valid atau sudah kadaluarsa" });
+    return res
+      .status(401)
+      .json({
+        success: false,
+        message: "Token tidak valid atau sudah kadaluarsa",
+      });
   }
 };

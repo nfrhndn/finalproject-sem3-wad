@@ -111,47 +111,66 @@ const Cart = () => {
   ];
 
   const handlePayment = async () => {
-  if (selectedCartItems.length === 0 || !selectedPayment) return;
+    if (selectedCartItems.length === 0) {
+      alert("⚠️ Pilih minimal satu tiket untuk dibayar.");
+      return;
+    }
 
-  try {
-    for (const item of selectedCartItems) {
-      const data = await checkoutApi({
-        movieId: item.movieId,
-        title: item.title,
-        poster: item.poster,
-        cinema: item.cinema,
-        date: item.date,
-        time: item.time,
-        seats: item.seats,
-        price: item.price,
-        total: item.total,
-      });
+    if (!selectedPayment) {
+      alert("⚠️ Pilih metode pembayaran terlebih dahulu.");
+      return;
+    }
 
-      console.log("Booking response:", data);
+    try {
+      const token = localStorage.getItem("token");
 
-      if (!data.success) {
-        alert(`Gagal booking ${item.title}: ${data.message}`);
+      if (!token) {
+        alert("⚠️ Sesi kamu berakhir, silakan login ulang.");
+        navigate("/login");
         return;
       }
 
-      await removeFromCartApi(item.id);
+      const payload = {
+        items: selectedCartItems.map((item) => ({
+          id: item.id,
+          movieId: item.movieId,
+          title: item.title,
+          poster: item.poster,
+          cinema: item.cinema,
+          date: item.date,
+          time: item.time,
+          seats: item.seats,
+          price: item.price,
+          total: item.total,
+        })),
+        paymentMethod: selectedPayment,
+      };
+
+      console.log("📦 Checkout payload:", payload);
+
+      const data = await checkoutApi(payload, token);
+      console.log("💳 Checkout response:", data);
+
+      if (data?.success) {
+        alert("✅ Pembayaran berhasil! Tiket kamu sudah terbuat.");
+        setCart([]);
+        setSelectedItems([]);
+        navigate("/tiket");
+      } else if (data?.message?.includes("Sesi kamu")) {
+        alert(data.message);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+      } else {
+        alert(`❌ ${data?.message || "Gagal checkout, silakan coba lagi."}`);
+      }
+    } catch (error) {
+      console.error("🚨 Checkout gagal:", error);
+      alert(
+        "❌ Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi."
+      );
     }
-
-    alert("✅ Pembayaran berhasil! Terima Kasih.");
-
-    const updated = await getCartApi();
-    if (updated.success) {
-      setCart(updated.cart.reverse());
-    }
-
-    setSelectedItems([]);
-    navigate("/tiket");
-
-  } catch (error) {
-    console.error("Checkout gagal:", error);
-    alert("❌ Terjadi kesalahan saat memproses pembayaran.");
-  }
-};
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">

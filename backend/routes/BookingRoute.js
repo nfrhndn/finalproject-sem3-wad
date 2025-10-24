@@ -15,7 +15,7 @@ import {
 
 const router = express.Router();
 
-router.post("/", authenticate, createBooking);          
+router.post("/", authenticate, createBooking);
 router.get("/", authenticate, getBookings);
 
 // router.post("/checkout", authenticate, checkoutBooking);

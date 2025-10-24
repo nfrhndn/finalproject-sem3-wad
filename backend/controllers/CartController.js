@@ -93,9 +93,17 @@ export const clearCart = (req, res) => {
   return res.json({ success: true, message: "Cart dikosongkan" });
 };
 
-export const checkoutCart = (req, res) => {
+export const checkoutCart = async (req, res) => {
   try {
     const { items, paymentMethod } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User belum login atau token tidak valid",
+      });
+    }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -129,27 +137,39 @@ export const checkoutCart = (req, res) => {
         .slice(0, 3) + Math.floor(100000 + Math.random() * 900000).toString();
 
     const tickets = toCheckout.map((item) => ({
-      ...item,
+      userId,
+      movieId: item.movieId,
+      title: item.title,
+      poster: item.poster,
+      cinema: item.cinema,
+      date: item.date,
+      time: item.time,
+      seats: Array.isArray(item.seats)
+        ? item.seats.join(", ")
+        : String(item.seats || ""),
+      price: item.price,
+      total: item.total,
       bookingCode: generateBookingCode(item.title),
       paymentMethod: paymentMethod || null,
-      bookedAt: new Date().toISOString(),
+      createdAt: new Date(),
     }));
 
-    addTickets(tickets);
+    await addTickets(tickets);
 
     cart = cart.filter((c) => !ids.includes(String(c.id)));
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "✅ Checkout berhasil",
+      message: "✅ Checkout berhasil dan tiket disimpan",
       tickets,
       cart,
     });
   } catch (err) {
+    console.error("🔥 ERROR di checkoutCart:", err);
     return res.status(500).json({
       success: false,
       message: "❌ Gagal melakukan checkout",
-      error: err.message,
+      error: err?.message || err,
     });
   }
 };

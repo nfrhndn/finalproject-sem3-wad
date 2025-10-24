@@ -12,6 +12,8 @@ const updateProfileSchema = z.object({
   paymentMethod: z.string().nullable().optional(),
 });
 
+console.log("JWT_SECRET (server):", process.env.JWT_SECRET);
+
 export const getProfile = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
@@ -118,25 +120,33 @@ export const updateProfile = async (req, res) => {
 export const uploadAvatar = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token)
-      return res
-        .status(401)
-        .json({ success: false, message: "Token tidak ditemukan" });
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Token tidak ditemukan",
+      });
+    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     const user = await prisma.user.findUnique({
       where: { email: decoded.email },
+      include: { profile: true },
     });
 
-    if (!user)
-      return res
-        .status(404)
-        .json({ success: false, message: "User tidak ditemukan" });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User tidak ditemukan",
+      });
+    }
 
-    if (!req.file)
-      return res
-        .status(400)
-        .json({ success: false, message: "File tidak ditemukan" });
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "File tidak ditemukan",
+      });
+    }
 
     if (!req.file.mimetype.startsWith("image/")) {
       return res.status(400).json({
@@ -145,7 +155,7 @@ export const uploadAvatar = async (req, res) => {
       });
     }
 
-    const filePath = `/uploads/${req.file.filename}`;
+    const filePath = `/uploads/avatars/${req.file.filename}`;
 
     const profile = await prisma.profile.upsert({
       where: { userId: user.id },
@@ -159,6 +169,7 @@ export const uploadAvatar = async (req, res) => {
     });
 
     const { password, ...safeUser } = user;
+
     return res.json({
       success: true,
       message: "Avatar berhasil diunggah",
@@ -169,9 +180,11 @@ export const uploadAvatar = async (req, res) => {
       profile,
     });
   } catch (err) {
-    console.error("UploadAvatar error:", err.message);
-    return res
-      .status(500)
-      .json({ success: false, message: "Terjadi kesalahan server" });
+    console.error("UploadAvatar error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan server",
+      error: err.message,
+    });
   }
 };

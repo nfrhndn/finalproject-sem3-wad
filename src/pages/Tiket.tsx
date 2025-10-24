@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Ticket as TicketIcon, Calendar, Clock3, MapPin } from "lucide-react";
-import { fetchTickets } from "../Services/api";
+import { API_BASE_URL } from "../Services/api";
 
 interface TicketItem {
   id: number;
@@ -25,24 +25,52 @@ const Tiket = () => {
   useEffect(() => {
     const loadTickets = async () => {
       try {
-        const res = await fetchTickets();
-        if (res.success && res.bookings) {
-          const sortedTickets = [...res.bookings].sort((a: any, b: any) => {
+        const token =
+          localStorage.getItem("token") ||
+          localStorage.getItem("userToken") ||
+          localStorage.getItem("adminToken");
+
+        if (!token) {
+          alert("⚠️ Sesi kamu sudah berakhir. Silakan login ulang.");
+          window.location.href = "/login";
+          return;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/tickets`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (res.status === 401) {
+          alert("⚠️ Sesi kamu sudah berakhir. Silakan login ulang.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data.success && data.tickets) {
+          const sortedTickets = [...data.tickets].sort((a, b) => {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
-          return dateB - dateA;
+            return dateB - dateA;
           });
           setTickets(sortedTickets);
         } else {
           setTickets([]);
         }
       } catch (err) {
-        console.error("Gagal memuat tiket:", err);
+        console.error("❌ Gagal memuat tiket:", err);
         setTickets([]);
       } finally {
         setLoading(false);
       }
     };
+
     loadTickets();
   }, []);
 
@@ -50,7 +78,10 @@ const Tiket = () => {
     const now = new Date();
     const ticketDateTime = new Date(`${date}T${time}:00`);
     if (ticketDateTime > now) return { label: "Aktif", color: "bg-green-500" };
-    if (ticketDateTime.toDateString() === now.toDateString() && ticketDateTime < now)
+    if (
+      ticketDateTime.toDateString() === now.toDateString() &&
+      ticketDateTime < now
+    )
       return { label: "Sudah Digunakan", color: "bg-gray-400" };
     return { label: "Kadaluarsa", color: "bg-red-500" };
   };
@@ -66,6 +97,14 @@ const Tiket = () => {
   if (loading) {
     return (
       <div className="text-center text-gray-600 mt-10">Memuat tiket...</div>
+    );
+  }
+
+  if (tickets.length === 0) {
+    return (
+      <div className="text-center text-gray-500 mt-10">
+        Tidak ada tiket yang ditemukan.
+      </div>
     );
   }
 

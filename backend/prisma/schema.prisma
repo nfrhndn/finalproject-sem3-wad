@@ -30,19 +30,22 @@ model Admin {
 
 
 model Booking {
-  id           Int      @id @default(autoincrement())
-  userId       Int
-  movieId      Int
-  title        String
-  poster       String?
-  cinema       String
-  date         String
-  time         String
-  seats        String
-  price        Float
-  total        Float
-  createdAt    DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id])
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  movieId        Int
+  title          String
+  poster         String?
+  cinema         String
+  date           String
+  time           String
+  seats          String
+  price          Float
+  total          Float
+  bookingCode    String   @unique
+  paymentMethod  String
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id])
 }
 
 model Profile {
