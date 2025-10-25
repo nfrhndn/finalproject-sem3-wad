@@ -63,9 +63,44 @@ const Checkout = () => {
 
     const fetchMovie = async () => {
       try {
+        if (Number(movieId) < 1000) {
+          console.warn("🔸 ID ini berasal dari database lokal, bukan TMDB.");
+          setMovie({
+            id: Number(movieId),
+            title: "Film tidak ditemukan",
+            poster_path: "",
+            overview: "Data film tidak tersedia untuk ID ini.",
+            release_date: "",
+            runtime: 0,
+            genres: [],
+            original_language: "id",
+            vote_average: 0,
+          });
+          return;
+        }
+
         const res = await fetch(
           `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&language=id-ID`
         );
+
+        if (!res.ok) {
+          console.warn(
+            "⚠️ Film tidak ditemukan di TMDB, tampilkan fallback data"
+          );
+          setMovie({
+            id: Number(movieId),
+            title: "Film tidak ditemukan",
+            poster_path: "",
+            overview: "Data film tidak tersedia untuk ID ini.",
+            release_date: "",
+            runtime: 0,
+            genres: [],
+            original_language: "id",
+            vote_average: 0,
+          });
+          return;
+        }
+
         let data = await res.json();
 
         if (!data.overview || data.overview.trim() === "") {
@@ -74,6 +109,7 @@ const Checkout = () => {
           );
           data = await resEn.json();
         }
+
         setMovie(data);
 
         const creditsRes = await fetch(
@@ -93,13 +129,24 @@ const Checkout = () => {
           setEditId(parsed.id);
           localStorage.removeItem("editItem");
         }
-      } catch (err) {
-        console.error("Gagal fetch movie/credits:", err);
+      } catch (error) {
+        console.error("❌ Gagal fetch movie/credits:", error);
+        setMovie({
+          id: Number(movieId),
+          title: "Film tidak ditemukan",
+          poster_path: "",
+          overview: "Tidak dapat memuat detail film.",
+          release_date: "",
+          runtime: 0,
+          genres: [],
+          original_language: "id",
+          vote_average: 0,
+        });
       }
     };
 
     fetchMovie();
-  }, [movieId, API_KEY]);
+  }, [movieId, API_KEY, BASE_URL]);
 
   if (!movie) return <p className="text-center py-10">Loading...</p>;
 
@@ -178,9 +225,12 @@ const Checkout = () => {
       <div className="grid md:grid-cols-3 gap-8">
         <div className="flex flex-col items-center gap-6">
           <img
-            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-            alt={movie.title}
-            className="rounded-lg shadow-lg mb-4 w-64 md:w-72 h-auto object-cover"
+            src={
+              movie.poster_path
+                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                : "/placeholder-poster.png"
+            }
+            alt={movie.title || "Poster tidak tersedia"}
           />
           <div className="bg-cyan-600 text-white px-3 py-1 rounded-full text-sm">
             ⭐ {movie.vote_average.toFixed(1)}

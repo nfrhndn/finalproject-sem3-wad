@@ -13,6 +13,7 @@ import cartRoutes from "./routes/CartRoute.js";
 import ticketRoutes from "./routes/TicketRoute.js";
 import userRoutes from "./routes/UserRoute.js";
 import adminRoutes from "./routes/AdminRoute.js";
+import tmdbRoutes from "./routes/TmdbRoute.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -49,6 +50,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/tmdb", tmdbRoutes);
 
 app.use((err, req, res, next) => {
   console.error("🔥 Unexpected Error:", err.stack || err);

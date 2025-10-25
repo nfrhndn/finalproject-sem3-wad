@@ -4,13 +4,18 @@ import { useAuth } from "../context/AuthContext";
 import Hero from "../components/Hero";
 import CinemaCard from "../components/CinemaCard";
 import MoviesSlider from "../components/MoviesSlider";
-import { fetchPopularMovies, fetchMovieDetail } from "../Services/api";
 import TrailerModal from "../components/TrailerModal";
 
 interface Movie {
   id: number;
+  tmdbId: number;
   title: string;
-  poster_path: string;
+  posterUrl?: string;
+  backdropUrl?: string;
+  description?: string;
+  videos?: {
+    results: { key: string; site: string; type: string }[];
+  };
 }
 
 const Home = () => {
@@ -20,59 +25,70 @@ const Home = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
 
+  const BASE_URL = "http://localhost:5000/api/movies";
+
   useEffect(() => {
-    const loadMovies = async () => {
+    const fetchMovies = async () => {
       try {
-        const data = await fetchPopularMovies();
-        console.log("Popular movies data:", data);
-        setMovies(data.results.slice(0, 10));
+        const res = await fetch(`${BASE_URL}/published`);
+        if (!res.ok) throw new Error("Gagal fetch film dari backend");
+
+        const data = await res.json();
+        console.log("🎬 Data film di Home:", data);
+        setMovies(Array.isArray(data) ? data : data.movies || []);
       } catch (error) {
-        console.error("Gagal fetch film:", error);
+        console.error("❌ Error fetch film:", error);
+        setMovies([]);
       }
     };
-    loadMovies();
+
+    fetchMovies();
   }, []);
 
   const handleTrailer = async (movieId: number) => {
     try {
-      const data = await fetchMovieDetail(movieId);
-      console.log("Movie detail:", data);
-      if (data.videos && data.videos.results) {
-        const youtubeVideo = data.videos.results.find(
-          (vid: any) => vid.site === "YouTube" && vid.type === "Trailer"
-        );
-        if (youtubeVideo) {
-          setTrailerKey(youtubeVideo.key);
-        } else {
-          alert("Trailer tidak tersedia.");
-        }
+      const res = await fetch(`${BASE_URL}/${movieId}`);
+      if (!res.ok) throw new Error("Gagal fetch detail film dari backend");
+      const data = await res.json();
+
+      const youtubeVideo = data.videos?.results?.find(
+        (vid: any) => vid.site === "YouTube" && vid.type === "Trailer"
+      );
+
+      if (youtubeVideo) {
+        setTrailerKey(youtubeVideo.key);
       } else {
         alert("Trailer tidak tersedia.");
       }
     } catch (error) {
-      console.error("Gagal fetch trailer:", error);
+      console.error("❌ Gagal fetch trailer:", error);
     }
   };
 
-  const handlePesanTiket = (movieId: number) => {
+  const handlePesanTiket = (tmdbId: number) => {
     if (!user) {
       navigate("/login");
     } else {
-      navigate(`/checkout/${movieId}`);
+      navigate(`/checkout/${tmdbId}`);
     }
   };
+
+  const mappedMovies = movies.map((m) => ({
+    ...m,
+    poster_path: m.posterUrl || "",
+    tmdbId: m.tmdbId,
+  }));
 
   return (
     <div>
       <Hero />
 
       <MoviesSlider
-        movies={movies}
+        movies={mappedMovies}
         onTrailer={handleTrailer}
         onPesan={handlePesanTiket}
         onSeeAll={() => navigate("/film")}
       />
-
 
       {trailerKey && (
         <TrailerModal

@@ -5,6 +5,7 @@ import MovieCard from "./MovieCard";
 
 interface Movie {
   id: number;
+  tmdbId: number;
   title: string;
   poster_path: string;
 }
@@ -12,7 +13,7 @@ interface Movie {
 interface MoviesSliderProps {
   movies: Movie[];
   onTrailer: (id: number) => void;
-  onPesan: (id: number) => void;
+  onPesan: (tmdbId: number) => void;
   onSeeAll?: () => void;
 }
 
@@ -56,13 +57,12 @@ const MoviesSlider: React.FC<MoviesSliderProps> = ({
               title={movie.title}
               posterPath={movie.poster_path}
               onTrailer={onTrailer}
-              onPesan={onPesan}
+              onPesan={() => onPesan(movie.tmdbId)}
             />
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {/* Tombol navigasi MOVIESLIDER */}
       <button className="movieslider-button-prev absolute top-1/2 -left-12 z-10 border-2 border-cyan-600 text-cyan-600 rounded-full w-12 h-12 flex items-center justify-center hover:bg-cyan-600 hover:text-white transition transform -translate-y-1/2 text-2xl font-bold">
         ←
       </button>

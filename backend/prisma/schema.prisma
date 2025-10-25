@@ -60,18 +60,59 @@ model Profile {
   updatedAt     DateTime   @updatedAt
 }
 
+// ==============================
+// MODEL: Genre
+// ==============================
+model Genre {
+  id      Int           @id @default(autoincrement())
+  name    String         @unique
+  movies  MovieGenre[]
+}
+
+// ==============================
+// MODEL: Movie
+// ==============================
 model Movie {
-  id           Int       @id @default(autoincrement())
-  tmdbId       Int?      @unique
+  id           Int           @id @default(autoincrement())
+  tmdbId       Int?          @unique
   title        String
-  description  String?   @default("Deskripsi tidak tersedia.")
-  genre        String?   @default("Tidak diketahui")
+  description  String?        @default("Deskripsi tidak tersedia.")
   duration     Int?
   releaseDate  DateTime?
   posterUrl    String?
-  status       String?
-  source       String?   @default("TMDB")
-  isPublished  Boolean   @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  backdropUrl  String?        // background poster TMDB
+  trailerUrl   String?  
+  source       String?        @default("TMDB")
+
+  // Status film dan publikasi
+  status       MovieStatus    @default(DRAFT)
+  isPublished  Boolean        @default(false)
+
+  // Relasi many-to-many ke Genre
+  genres       MovieGenre[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// ==============================
+// MODEL: Pivot Movie <-> Genre
+// ==============================
+model MovieGenre {
+  movieId  Int
+  genreId  Int
+  movie    Movie @relation(fields: [movieId], references: [id])
+  genre    Genre @relation(fields: [genreId], references: [id])
+
+  @@id([movieId, genreId])
+}
+
+// ==============================
+// ENUM: Status Film
+// ==============================
+enum MovieStatus {
+  DRAFT       
+  PUBLISHED   
+  UPCOMING    
+  ARCHIVED    
 }

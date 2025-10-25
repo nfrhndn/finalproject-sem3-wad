@@ -27,15 +27,35 @@ const Film = () => {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/${category}`);
+        const endpoint =
+          category === "now_playing"
+            ? `${BASE_URL}/published`
+            : `${BASE_URL}/upcoming`;
+
+        console.log(`📡 Fetching movies from: ${endpoint}`);
+
+        const res = await fetch(endpoint);
         if (!res.ok) throw new Error("Gagal fetch film dari backend");
+
         const data = await res.json();
-        setMovies(data.results || []);
+        console.log("🎬 Data film (raw):", data);
+
+        const safeMovies = Array.isArray(data)
+          ? data
+          : Array.isArray(data.results)
+          ? data.results
+          : Array.isArray(data.movies)
+          ? data.movies
+          : [];
+
+        console.log("✅ Normalized movies:", safeMovies);
+        setMovies(safeMovies);
       } catch (error) {
         console.error("❌ Error fetch film:", error);
         setMovies([]);
       }
     };
+
     fetchMovies();
   }, [category]);
 
@@ -59,11 +79,11 @@ const Film = () => {
     }
   };
 
-  const handlePesanTiket = (movieId: number) => {
+  const handlePesanTiket = (tmdbId: number) => {
     if (!user) {
       navigate("/login");
     } else {
-      navigate(`/checkout/${movieId}`);
+      navigate(`/checkout/${tmdbId}`);
     }
   };
 
@@ -114,8 +134,9 @@ const Film = () => {
           <MovieCard
             key={movie.id}
             id={movie.id}
+            tmdbId={(movie as any).tmdbId}
             title={movie.title}
-            posterPath={movie.poster_path}
+            posterPath={(movie as any).posterUrl}
             onTrailer={handleTrailer}
             onPesan={handlePesanTiket}
             isUpcoming={category === "upcoming"}

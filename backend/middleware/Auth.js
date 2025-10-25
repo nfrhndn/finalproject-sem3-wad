@@ -17,12 +17,11 @@ function getJwtSecret() {
   return JWT_SECRET;
 }
 
-export const authenticate = (req, res, next) => {
+export const verifyToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    console.log("🪪 Header Authorization:", authHeader || "❌ Tidak ada header");
-
     if (!authHeader) {
+      console.warn("⚠️ Tidak ada header Authorization");
       return res.status(401).json({
         success: false,
         message: "Sesi kamu sudah berakhir. Silakan login ulang.",
@@ -31,7 +30,10 @@ export const authenticate = (req, res, next) => {
 
     const parsedAuth = authHeaderSchema.safeParse(authHeader);
     if (!parsedAuth.success) {
-      console.warn("⚠️ Header Authorization tidak valid:", parsedAuth.error);
+      console.warn(
+        "⚠️ Header Authorization tidak valid:",
+        parsedAuth.error.format()
+      );
       return res.status(401).json({
         success: false,
         message: "Sesi kamu sudah berakhir. Silakan login ulang.",
@@ -44,28 +46,14 @@ export const authenticate = (req, res, next) => {
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
         console.warn("⚠️ JWT Verification Error:", err.name);
+        const message =
+          err.name === "TokenExpiredError"
+            ? "Sesi kamu sudah berakhir. Silakan login ulang."
+            : "Token tidak valid. Silakan login ulang.";
 
-        if (err.name === "TokenExpiredError") {
-          return res.status(401).json({
-            success: false,
-            message: "Sesi kamu sudah berakhir. Silakan login ulang.",
-          });
-        }
-
-        if (err.name === "JsonWebTokenError") {
-          return res.status(401).json({
-            success: false,
-            message: "Token tidak valid. Silakan login ulang.",
-          });
-        }
-
-        return res.status(401).json({
-          success: false,
-          message: "Sesi kamu sudah berakhir. Silakan login ulang.",
-        });
+        return res.status(401).json({ success: false, message });
       }
 
-      console.log("✅ Token valid. User:", decoded);
       req.user = decoded;
       next();
     });
@@ -78,8 +66,9 @@ export const authenticate = (req, res, next) => {
   }
 };
 
-export const authorizeAdmin = (req, res, next) => {
+export const verifyAdmin = (req, res, next) => {
   if (!req.user || req.user.role?.toLowerCase() !== "admin") {
+    console.warn("⚠️ Akses ditolak, bukan admin:", req.user);
     return res.status(403).json({
       success: false,
       message: "Akses ditolak. Hanya admin yang dapat mengakses fitur ini.",
@@ -87,3 +76,32 @@ export const authorizeAdmin = (req, res, next) => {
   }
   next();
 };
+
+export const verifyAdminToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Token tidak ditemukan" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.role !== "ADMIN") {
+      return res
+        .status(403)
+        .json({ error: "Akses ditolak. Hanya admin yang bisa melakukan ini." });
+    }
+
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.error("❌ verifyAdminToken error:", err.message);
+    return res.status(401).json({ error: "Token tidak valid" });
+  }
+};
+
+export const authenticate = verifyToken;
+export const authorizeAdmin = verifyAdmin;
