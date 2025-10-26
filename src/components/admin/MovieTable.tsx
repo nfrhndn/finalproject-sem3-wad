@@ -1,4 +1,4 @@
-import { SquarePenIcon, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 interface MovieTableProps {
   movies: any[];
@@ -8,6 +8,7 @@ interface MovieTableProps {
   handleDelete: (id: number) => void;
   handleUnpublish?: (id: number) => void;
   setShowPublishModal?: (show: boolean) => void;
+  setSelected: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
 export default function MovieTable({
@@ -45,17 +46,15 @@ export default function MovieTable({
               let statusLabel = "Tidak Tayang";
               if (movie.status === "PUBLISHED") statusLabel = "Sedang Tayang";
               else if (movie.status === "UPCOMING") statusLabel = "Akan Tayang";
-              else if (movie.status === "ARCHIVED")
-                statusLabel = "Tidak Tayang";
+              else if (movie.status === "ARCHIVED") statusLabel = "Tidak Tayang";
 
               return (
                 <tr
                   key={movie.id}
-                  className={`border-t border-gray-200 hover:bg-cyan-50 transition ${
-                    selected.includes(movie.id) ? "bg-cyan-100" : ""
-                  }`}
+                  className={`border-t border-gray-200 hover:bg-cyan-50 transition ${selected.includes(movie.id) ? "bg-cyan-100" : ""
+                    }`}
                 >
-                  <td className="p-3">
+                  <td className="p-3 align-middle">
                     <input
                       type="checkbox"
                       checked={selected.includes(movie.id)}
@@ -63,7 +62,7 @@ export default function MovieTable({
                     />
                   </td>
 
-                  <td className="p-3 text-gray-500">
+                  <td className="p-3 text-gray-500 align-middle">
                     {movie.posterUrl ? (
                       <img
                         src={movie.posterUrl}
@@ -77,14 +76,13 @@ export default function MovieTable({
                     )}
                   </td>
 
-                  <td className="p-3 font-medium text-gray-800">
+                  <td className="p-3 font-medium text-gray-800 align-middle">
                     {movie.title}
                   </td>
 
-                  <td className="p-3">
+                  <td className="p-3 align-middle">
                     <div className="flex gap-1 flex-wrap">
-                      {Array.isArray(movie.genres) &&
-                      movie.genres.length > 0 ? (
+                      {Array.isArray(movie.genres) && movie.genres.length > 0 ? (
                         movie.genres.map((genre: string) => (
                           <span
                             key={genre}
@@ -101,17 +99,15 @@ export default function MovieTable({
                     </div>
                   </td>
 
-                  <td className="p-3 text-gray-600 max-w-xs truncate">
+                  <td className="p-3 text-gray-600 max-w-xs truncate align-middle">
                     {movie.description || "-"}
                   </td>
 
-                  <td className="p-3">
-                    {releaseDate
-                      ? releaseDate.toLocaleDateString("id-ID")
-                      : "-"}
+                  <td className="p-3 align-middle">
+                    {releaseDate ? releaseDate.toLocaleDateString("id-ID") : "-"}
                   </td>
 
-                  <td className="p-3">
+                  <td className="p-3 align-middle">
                     {statusLabel === "Sedang Tayang" && (
                       <span className="bg-green-200 text-green-800 text-xs px-2 py-1 rounded-md">
                         Sedang Tayang
@@ -129,24 +125,26 @@ export default function MovieTable({
                     )}
                   </td>
 
-                  <td className="p-3 text-right flex justify-end gap-3">
-                    {handleUnpublish && statusLabel !== "Tidak Tayang" && (
-                      <button
-                        onClick={() => handleUnpublish(movie.id)}
-                        className="text-gray-500 hover:text-amber-600 transition"
-                        title="Unpublish Film"
-                      >
-                        <SquarePenIcon size={16} />
-                      </button>
-                    )}
+                  <td className="p-3 text-right align-middle">
+                    <div className="flex items-center justify-end gap-3 h-full">
+                      {handleUnpublish && statusLabel !== "Tidak Tayang" && (
+                        <button
+                          onClick={() => handleUnpublish(movie.id)}
+                          className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-md text-xs transition"
+                        >
+                          Unpublish Film
+                        </button>
+                      )}
 
-                    <button
-                      onClick={() => handleDelete(movie.id)}
-                      className="text-red-500 hover:text-red-600 transition"
-                      title="Hapus Film"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                      <button
+                        onClick={() => handleDelete(movie.id)}
+                        className="flex items-center justify-center h-8 w-8 rounded-md bg-white hover:bg-red-50 transition"
+                        title="Hapus Film"
+                        aria-label={`Hapus ${movie.title}`}
+                      >
+                        <Trash2 size={16} className="text-red-500" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

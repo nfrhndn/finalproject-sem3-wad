@@ -9,15 +9,14 @@ export default function PublishModal({
   const selectedMovies = movies.filter((m: any) => selected.includes(m.id));
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
-        <h2 className="text-lg font-semibold mb-1">Publish Film</h2>
+    <div className="fixed inset-0 bg-gray-900/40 flex justify-center items-center z-50">
+      <div className="bg-white/95 rounded-2xl shadow-xl w-full max-w-md p-6 border border-gray-100">
+        <h2 className="text-lg font-semibold mb-1 text-gray-800">Publish Film</h2>
         <p className="text-gray-500 mb-4 text-sm">
-          Pilih status publikasi untuk <b>{selected.length}</b> film yang
-          dipilih
+          Pilih status publikasi untuk <b>{selected.length}</b> film yang dipilih
         </p>
 
-        <label className="block text-sm font-medium mb-2">
+        <label className="block text-sm font-medium mb-2 text-gray-700">
           Status Publikasi
         </label>
         <select
@@ -30,20 +29,20 @@ export default function PublishModal({
           <option value="Tidak Tayang">Tidak Tayang</option>
         </select>
 
-        <div className="bg-gray-50 rounded-lg p-3 mb-5 text-sm max-h-60 overflow-y-auto">
-          <p className="font-medium mb-2">Film yang akan dipublish:</p>
+        <div className="bg-gray-50/80 rounded-lg p-3 mb-5 text-sm max-h-60 overflow-y-auto shadow-inner">
+          <p className="font-medium mb-2 text-gray-700">Film yang akan dipublish:</p>
 
           {selectedMovies.length > 0 ? (
             selectedMovies.map((m: any) => (
               <div
                 key={m.id}
-                className="border border-gray-200 rounded-md p-2 flex items-center gap-3 mb-2"
+                className="border border-gray-200 rounded-md p-2 flex items-center gap-3 mb-2 bg-white/80 hover:bg-gray-50 transition"
               >
                 {m.posterUrl ? (
                   <img
                     src={m.posterUrl}
                     alt={m.title}
-                    className="w-10 h-14 object-cover rounded-md"
+                    className="w-10 h-14 object-cover rounded-md shadow-sm"
                   />
                 ) : (
                   <div className="w-10 h-14 bg-gray-300 rounded-md flex items-center justify-center text-gray-500 text-xs">
@@ -75,18 +74,17 @@ export default function PublishModal({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-100"
+            className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-100 transition"
           >
             Batal
           </button>
           <button
             onClick={onPublish}
             disabled={selectedMovies.length === 0}
-            className={`px-4 py-2 text-sm rounded-lg text-white transition ${
-              selectedMovies.length === 0
+            className={`px-4 py-2 text-sm rounded-lg text-white shadow-md transition ${selectedMovies.length === 0
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-cyan-600 hover:bg-cyan-700"
-            }`}
+              }`}
           >
             Publish Film
           </button>

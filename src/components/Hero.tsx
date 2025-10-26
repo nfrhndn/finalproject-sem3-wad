@@ -19,13 +19,11 @@ const Hero: React.FC = () => {
   useEffect(() => {
     const loadMovies = async () => {
       try {
-        // 🎬 Ambil film populer versi Bahasa Indonesia langsung dari TMDB
         const res = await fetch(
           `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=id-ID&page=1`
         );
         const data = await res.json();
 
-        // 🎯 Filter film: harus punya sinopsis & genre unik
         const uniqueGenres: number[] = [];
         const filteredMovies = data.results.filter((movie: any) => {
           if (
@@ -42,7 +40,6 @@ const Hero: React.FC = () => {
           return true;
         });
 
-        // 🔍 Ambil detail tiap film (untuk runtime & genre lengkap)
         const movieDetails = await Promise.all(
           filteredMovies.slice(0, 6).map(async (m: any) => {
             const detail = await fetchMovieDetail(m.id);
@@ -89,7 +86,7 @@ const Hero: React.FC = () => {
           prevEl: ".hero-button-prev",
         }}
         autoplay={{ delay: 6000, disableOnInteraction: false }}
-        loop={movies.length > 3} // ✅ Hanya aktif kalau film cukup banyak
+        loop={movies.length > 3}
         className="h-full"
       >
         {movies.map((movie) => (
@@ -127,7 +124,6 @@ const Hero: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 🎯 Sinopsis penuh versi Bahasa Indonesia */}
                 <p className="text-gray-200 mb-6 text-sm md:text-base whitespace-pre-line">
                   {movie.overview || "Sinopsis tidak tersedia."}
                 </p>
@@ -152,7 +148,6 @@ const Hero: React.FC = () => {
         ))}
       </Swiper>
 
-      {/* Tombol Navigasi unik */}
       <button className="hero-button-prev absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg">
         <svg
           xmlns="http://www.w3.org/2000/svg"

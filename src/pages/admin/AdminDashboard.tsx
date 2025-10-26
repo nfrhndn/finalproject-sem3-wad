@@ -44,7 +44,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="p-6 space-y-8">
-            {/* Header */}
+
             <div>
                 <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
                 <p className="text-gray-500 mt-1">
@@ -52,7 +52,6 @@ export default function AdminDashboard() {
                 </p>
             </div>
 
-            {/* Statistik Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                 {stats.map((item, index) => (
                     <div
@@ -75,9 +74,7 @@ export default function AdminDashboard() {
                 ))}
             </div>
 
-            {/* Film & Promo Sections */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Film Terpopuler */}
                 <div className="lg:col-span-2 bg-white rounded-xl shadow p-6">
                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
                         Film Terpopuler
@@ -100,7 +97,6 @@ export default function AdminDashboard() {
                     </ul>
                 </div>
 
-                {/* Promo Aktif */}
                 <div className="bg-white rounded-xl shadow p-6">
                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
                         Promo Aktif

@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Film, Users, Ticket, LayoutDashboard } from "lucide-react";
+import { Film, Users, Ticket, LayoutDashboard, Globe } from "lucide-react"; //
 import { useAuth } from "../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 
@@ -11,10 +11,7 @@ const AdminLayout = () => {
 
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
-            if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(e.target as Node)
-            ) {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
                 setIsDropdownOpen(false);
             }
         }
@@ -31,11 +28,8 @@ const AdminLayout = () => {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            {/* Sidebar */}
             <aside className="w-64 bg-[#0f172a] text-white flex flex-col fixed left-0 top-0 bottom-0">
-                <div className="p-6 text-xl font-bold text-cyan-400">
-                    CinemaPlus Admin
-                </div>
+                <div className="p-6 text-xl font-bold text-cyan-400">CinemaPlus Admin</div>
 
                 <nav className="flex-1 space-y-1 px-3">
                     {menuItems.map(({ name, icon: Icon, path }) => (
@@ -57,9 +51,7 @@ const AdminLayout = () => {
                 </nav>
             </aside>
 
-            {/* Main Content Area */}
             <div className="ml-64 flex-1 flex flex-col">
-                {/* Top Navbar */}
                 <header className="bg-white shadow-md px-6 py-3 flex justify-between items-center">
                     <h1 className="text-lg font-semibold text-gray-700">Admin Panel</h1>
 
@@ -87,14 +79,19 @@ const AdminLayout = () => {
                         {isDropdownOpen && (
                             <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200">
                                 <button
-                                    onClick={() => navigate("/profile")}
-                                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-cyan-100 transition"
+                                    onClick={() => {
+                                        setIsDropdownOpen(false);
+                                        navigate("/");
+                                    }}
+                                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-cyan-100 transition text-sm"
                                 >
-                                    Profil Saya
+                                    <Globe className="w-4 h-4 text-cyan-600" />
+                                    Web User
                                 </button>
+
                                 <button
                                     onClick={logout}
-                                    className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 transition"
+                                    className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 transition text-sm"
                                 >
                                     Keluar
                                 </button>
@@ -102,8 +99,6 @@ const AdminLayout = () => {
                         )}
                     </div>
                 </header>
-
-                {/* Content */}
                 <main className="flex-1 p-6">
                     <Outlet />
                 </main>

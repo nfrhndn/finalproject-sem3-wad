@@ -13,10 +13,7 @@ type AuthContextType = {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (
-    email: string,
-    password: string
-  ) => Promise<{ user: User; token: string }>;
+  login: (email: string, password: string) => Promise<{ user: User; token: string }>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
@@ -32,32 +29,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadAuthData = () => {
+    const loadAuthData = async () => {
       try {
         const savedUser = localStorage.getItem("user");
-        const savedAdminToken = localStorage.getItem("adminToken");
-        const savedUserToken = localStorage.getItem("userToken");
-        const savedToken = localStorage.getItem("token");
+        const savedToken =
+          localStorage.getItem("adminToken") ||
+          localStorage.getItem("userToken") ||
+          localStorage.getItem("token");
 
-        const activeToken =
-          savedAdminToken || savedUserToken || savedToken || null;
+        if (savedUser && savedToken) {
+          const parsedUser = JSON.parse(savedUser);
 
-        if (savedUser && activeToken) {
-          setUser(JSON.parse(savedUser));
-          setToken(activeToken);
-
-          localStorage.setItem("token", activeToken);
-
-          console.log("✅ Session dimuat:", {
-            user: JSON.parse(savedUser),
-            activeToken,
+          const res = await fetch(`${API_URL}/verify`, {
+            headers: { Authorization: `Bearer ${savedToken}` },
           });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.user) {
+              setUser(data.user);
+              localStorage.setItem("user", JSON.stringify(data.user));
+              console.log("✅ Session disinkronkan:", data.user);
+            } else {
+              setUser(parsedUser);
+              console.warn("⚠️ Backend tidak kirim user baru, pakai localStorage.");
+            }
+          } else {
+            console.warn("⚠️ Token invalid, logout otomatis.");
+            logout();
+            return;
+          }
+
+          setToken(savedToken);
         } else {
-          console.warn("⚠️ Tidak ada sesi tersimpan, user belum login.");
-          localStorage.removeItem("token");
+          console.warn("⚠️ Tidak ada sesi tersimpan.");
+          localStorage.clear();
         }
       } catch (err) {
-        console.error("❌ Gagal parse data auth:", err);
+        console.error("❌ Gagal memuat sesi:", err);
         localStorage.clear();
       } finally {
         setLoading(false);
@@ -66,59 +75,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     loadAuthData();
   }, []);
-
-  useEffect(() => {
-    if (user) localStorage.setItem("user", JSON.stringify(user));
-    else localStorage.removeItem("user");
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    if (token) {
-      const isAdmin = user.role?.toLowerCase() === "admin";
-      if (isAdmin) {
-        localStorage.setItem("adminToken", token);
-        localStorage.removeItem("userToken");
-      } else {
-        localStorage.setItem("userToken", token);
-        localStorage.removeItem("adminToken");
-      }
-
-      localStorage.setItem("token", token);
-
-      console.log("💾 Token disimpan:", token);
-    }
-  }, [token, user]);
-
-  useEffect(() => {
-    if (!token) return;
-    let retryCount = 0;
-
-    const verifyToken = async () => {
-      try {
-        const res = await fetch(`${API_URL}/verify`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.status === 401 || res.status === 403) {
-          retryCount++;
-          console.warn(`⚠️ Token invalid (percobaan ${retryCount})`);
-          if (retryCount >= 2) logout();
-        } else if (res.ok) {
-          retryCount = 0;
-        }
-      } catch (error) {
-        console.error(
-          "⚠️ Gagal menghubungi server untuk verifikasi token:",
-          error
-        );
-      }
-    };
-
-    verifyToken();
-    const interval = setInterval(verifyToken, 2 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [token]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -129,9 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const data = await res.json();
-
-      if (!res.ok || !data.success)
-        throw new Error(data.message || "Login gagal");
+      if (!res.ok || !data.success) throw new Error(data.message || "Login gagal");
 
       const userData: User = data.user;
       const receivedToken: string = data.token;
@@ -141,24 +95,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const isAdmin = userData.role?.toLowerCase() === "admin";
       localStorage.setItem("user", JSON.stringify(userData));
-
-      if (isAdmin) {
-        localStorage.setItem("adminToken", receivedToken);
-        localStorage.removeItem("userToken");
-        navigate("/admin");
-      } else {
-        localStorage.setItem("userToken", receivedToken);
-        localStorage.removeItem("adminToken");
-        navigate("/");
-      }
-
+      localStorage.setItem(isAdmin ? "adminToken" : "userToken", receivedToken);
       localStorage.setItem("token", receivedToken);
 
       console.log("✅ Login sukses:", userData);
+
+      navigate(isAdmin ? "/admin" : "/");
       return { user: userData, token: receivedToken };
     } catch (error: any) {
       console.error("❌ Error login:", error);
-      throw new Error(error.message || "Gagal login: server tidak tersedia");
+      throw new Error(error.message || "Gagal login");
     }
   };
 
@@ -171,16 +117,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success)
-        throw new Error(data.message || "Registrasi gagal");
+      if (!res.ok || !data.success) throw new Error(data.message || "Registrasi gagal");
 
       alert("Registrasi berhasil! Silakan login.");
       navigate("/login");
     } catch (error: any) {
       console.error("❌ Error register:", error);
-      throw new Error(
-        error.message || "Terjadi kesalahan server saat registrasi"
-      );
+      throw new Error(error.message || "Terjadi kesalahan server saat registrasi");
     }
   };
 
@@ -196,14 +139,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, token, loading, login, register, logout, setUser }}
-    >
-      {!loading ? (
-        children
-      ) : (
-        <div className="text-center p-6">Loading session...</div>
-      )}
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, setUser }}>
+      {!loading ? children : <div className="text-center p-6">Loading session...</div>}
     </AuthContext.Provider>
   );
 };

@@ -1,10 +1,10 @@
-import { ShoppingCart, User, Ticket } from "lucide-react";
+import { ShoppingCart, User, Ticket, ShieldUser } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -28,10 +28,23 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    console.log("🧩 Role dari user:", user?.role);
+  }, [user]);
+
+  if (loading) {
+    return (
+      <nav className="sticky top-0 z-50 flex justify-between items-center px-8 py-4 shadow-md bg-white">
+        <div className="text-2xl font-bold text-cyan-600">CinemaPlus</div>
+        <div className="text-gray-500 animate-pulse">Memuat sesi...</div>
+      </nav>
+    );
+  }
+
   return (
     <nav className="sticky top-0 z-50 flex justify-between items-center px-8 py-4 shadow-md bg-white">
-      <div className="text-2xl font-bold text-cyan-600">CinemaPlus</div>
 
+      <div className="text-2xl font-bold text-cyan-600">CinemaPlus</div>
       <div className="flex space-x-6">
         {menuItems.map((item) => (
           <NavLink
@@ -39,10 +52,9 @@ export default function Navbar() {
             to={item.path}
             className={({ isActive }) =>
               `relative px-4 py-2 rounded-lg font-medium transition-all duration-300
-              ${
-                isActive
-                  ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white"
+              ${isActive
+                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
+                : "text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white"
               }`
             }
           >
@@ -61,7 +73,6 @@ export default function Navbar() {
             >
               Masuk
             </Link>
-
             <Link
               to="/register"
               className="px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold
@@ -89,46 +100,54 @@ export default function Navbar() {
                     src={
                       user.avatar.startsWith("http")
                         ? user.avatar
-                        : `${window.BASE_URL?.replace("/api", "")}${
-                            user.avatar
-                          }`
+                          : `${window.location.origin}${user.avatar}`
                     }
                     alt="avatar"
                     className="w-8 h-8 rounded-full object-cover border border-cyan-500"
                   />
                 ) : (
                   <User className="w-5 h-5" />
-                )}
-
+                  )}
                 <span className="hidden sm:inline font-medium">
                   {user.name || "User"}
                 </span>
               </button>
 
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200">
-                  <Link
-                    to="/profile"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
-                  >
-                    Profil Saya
-                  </Link>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200">
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
+                    >
+                      Profil Saya
+                    </Link>
 
-                  <Link
-                    to="/tiket"
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
-                  >
-                    <Ticket className="w-4 h-4" /> Tiket Saya
-                  </Link>
+                    <Link
+                      to="/tiket"
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
+                    >
+                      <Ticket className="w-4 h-4" /> Tiket Saya
+                    </Link>
 
-                  <button
-                    onClick={logout}
-                    className="w-full text-left px-4 py-2 hover:bg-red-200 text-sm text-red-600 transition"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
+
+                    {user.role?.toLowerCase() === "admin" && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gradient-to-r from-cyan-500 to-blue-600 hover:text-white text-sm transition"
+                      >
+                        <ShieldUser className="w-4 h-4" /> Web Admin
+                      </Link>
+                    )}
+
+                    <button
+                      onClick={logout}
+                      className="w-full text-left px-4 py-2 hover:bg-red-200 text-sm text-red-600 transition"
+                    >
+                      Keluar
+                    </button>
+                  </div>
+                )}
+
             </div>
           </>
         )}

@@ -192,32 +192,6 @@ export const unpublishMovie = async (req, res) => {
   }
 };
 
-export const editMovie = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, description, genres } = req.body;
-
-    const movie = await prisma.movie.update({
-      where: { id: parseInt(id) },
-      data: { title, description },
-    });
-
-    if (genres && Array.isArray(genres)) {
-      await prisma.movieGenre.deleteMany({ where: { movieId: movie.id } });
-      for (const gId of genres) {
-        await prisma.movieGenre.create({
-          data: { movieId: movie.id, genreId: gId },
-        });
-      }
-    }
-
-    res.json({ success: true, movie });
-  } catch (error) {
-    console.error("❌ Error editMovie:", error.message);
-    res.status(500).json({ error: "Failed to edit movie" });
-  }
-};
-
 export const deleteMovie = async (req, res) => {
   try {
     const { id } = req.params;
