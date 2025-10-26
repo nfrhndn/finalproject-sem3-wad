@@ -1,5 +1,13 @@
+import {
+    Film,
+    Users,
+    Ticket,
+    LayoutDashboard,
+    Globe,
+    SquareChevronLeft,
+    SquareChevronRight,
+} from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Film, Users, Ticket, LayoutDashboard, Globe } from "lucide-react"; //
 import { useAuth } from "../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 
@@ -7,6 +15,7 @@ const AdminLayout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -27,11 +36,21 @@ const AdminLayout = () => {
     ];
 
     return (
-        <div className="flex min-h-screen bg-gray-100">
-            <aside className="w-64 bg-[#0f172a] text-white flex flex-col fixed left-0 top-0 bottom-0">
-                <div className="p-6 text-xl font-bold text-cyan-400">CinemaPlus Admin</div>
+        <div className="flex min-h-screen bg-gray-100 transition-all duration-300">
+            <aside
+                className={`${sidebarOpen ? "w-64" : "w-20"
+                    } bg-[#0f172a] text-white flex flex-col fixed left-0 top-0 bottom-0 transition-all duration-300`}
+            >
+                <div className="p-6 flex items-center justify-between">
+                    <div
+                        className={`text-xl font-bold text-cyan-400 transition-all duration-300 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                            }`}
+                    >
+                        CinemaPlus Admin
+                    </div>
+                </div>
 
-                <nav className="flex-1 space-y-1 px-3">
+                <nav className="flex-1 space-y-1 px-3 mt-2">
                     {menuItems.map(({ name, icon: Icon, path }) => (
                         <NavLink
                             key={name}
@@ -44,16 +63,37 @@ const AdminLayout = () => {
                                 }`
                             }
                         >
-                            <Icon className="w-5 h-5" />
-                            {name}
+                            <Icon className="w-5 h-5 flex-shrink-0" />
+                            <span
+                                className={`transition-all duration-300 ${sidebarOpen ? "opacity-100" : "opacity-0 hidden"
+                                    }`}
+                            >
+                                {name}
+                            </span>
                         </NavLink>
                     ))}
                 </nav>
             </aside>
 
-            <div className="ml-64 flex-1 flex flex-col">
+            <div
+                className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-20"
+                    }`}
+            >
                 <header className="bg-white shadow-md px-6 py-3 flex justify-between items-center">
-                    <h1 className="text-lg font-semibold text-gray-700">Admin Panel</h1>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setSidebarOpen((prev) => !prev)}
+                            className="p-2 rounded hover:bg-cyan-100 text-gray-600 hover:text-cyan-600 transition"
+                        >
+                            {sidebarOpen ? (
+                                <SquareChevronLeft className="w-6 h-6" />
+                            ) : (
+                                <SquareChevronRight className="w-6 h-6" />
+                            )}
+                        </button>
+
+                        <h1 className="text-lg font-semibold text-gray-700">Admin Panel</h1>
+                    </div>
 
                     <div className="relative" ref={dropdownRef}>
                         <button
@@ -99,6 +139,7 @@ const AdminLayout = () => {
                         )}
                     </div>
                 </header>
+
                 <main className="flex-1 p-6">
                     <Outlet />
                 </main>

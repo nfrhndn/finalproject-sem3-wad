@@ -1,5 +1,5 @@
 import { z } from "zod";
-import prisma from "../prismaClient.js";
+import { prisma } from "../lib/prisma.js";
 import jwt from "jsonwebtoken";
 
 const updateProfileSchema = z.object({

@@ -1,4 +1,4 @@
-import prisma from "../prismaClient.js";
+import { prisma } from "../lib/prisma.js";
 import { z } from "zod";
 
 const bookingSchema = z.object({

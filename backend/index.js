@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import path from "path";
-import prisma from "./prismaClient.js";
+import { prisma } from "./lib/prisma.js";
 
 import authRoutes from "./routes/AuthRoute.js";
 import movieRoutes from "./routes/MovieRoute.js";
