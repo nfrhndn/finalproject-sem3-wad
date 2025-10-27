@@ -4,7 +4,6 @@ export const BASE_STATIC_URL = "http://localhost:5000";
 const MOVIE_BASE_URL = `${BASE_API_URL}/movies`;
 const BOOKING_BASE_URL = `${BASE_API_URL}/bookings`;
 const CART_BASE_URL = `${BASE_API_URL}/cart`;
-const TICKET_BASE_URL = `${BASE_API_URL}/tickets`;
 
 function isTokenExpired(token: string): boolean {
   try {
