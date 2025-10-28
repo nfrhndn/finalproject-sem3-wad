@@ -91,7 +91,7 @@ export const createBooking = async (req, res) => {
         seats: seatsString,
         price,
         total,
-        paymentMethod, // ← ini penting
+        paymentMethod, 
       },
     });
 

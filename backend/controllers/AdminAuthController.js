@@ -9,10 +9,9 @@ const loginSchema = z.object({
 });
 
 function getJwtSecret() {
-    if (!process.env.JWT_SECRET) {
-        throw new Error("JWT_SECRET belum diatur di .env");
-    }
-    return process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET;
+    if (!secret) throw new Error("JWT_SECRET belum diatur di .env");
+    return secret;
 }
 
 export const loginAdmin = async (req, res) => {
@@ -26,12 +25,13 @@ export const loginAdmin = async (req, res) => {
         }
 
         const { email, password } = parsed.data;
-        const admin = await prisma.admin.findUnique({ where: { email } });
 
-        if (!admin) {
-            return res.status(401).json({
+        const admin = await prisma.user.findUnique({ where: { email } });
+
+        if (!admin || admin.role !== "ADMIN") {
+            return res.status(403).json({
                 success: false,
-                message: "Email atau password salah.",
+                message: "Akun ini bukan admin.",
             });
         }
 
@@ -49,9 +49,9 @@ export const loginAdmin = async (req, res) => {
             { expiresIn: "4h" }
         );
 
-        res.json({
+        return res.json({
             success: true,
-            message: "Login admin berhasil",
+            message: "Login admin berhasil.",
             token,
             admin: {
                 id: admin.id,
@@ -61,7 +61,7 @@ export const loginAdmin = async (req, res) => {
             },
         });
     } catch (err) {
-        console.error("Login Admin Error:", err);
+        console.error("🔥 Login Admin Error:", err);
         res.status(500).json({
             success: false,
             message: "Terjadi kesalahan pada server.",

@@ -100,13 +100,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       console.log("✅ Login sukses:", userData);
 
-      navigate(isAdmin ? "/admin" : "/");
       return { user: userData, token: receivedToken };
     } catch (error: any) {
       console.error("❌ Error login:", error);
       throw new Error(error.message || "Gagal login");
     }
   };
+
 
   const register = async (name: string, email: string, password: string) => {
     try {

@@ -1,6 +1,6 @@
-import { Navigate } from "react-router-dom";
-import type { ReactNode } from "react";
 import { useAuth } from "../context/AuthContext";
+import type { ReactNode } from "react";
+import NotFound from "../pages/NotFound";
 
 type AdminRouteProps = {
     children: ReactNode;
@@ -20,7 +20,7 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     const isAdmin = user?.role?.toLowerCase() === "admin";
 
     if (!user || !token || !isAdmin) {
-        return <Navigate to="/login" replace />;
+        return <NotFound />;
     }
 
     return <>{children}</>;
