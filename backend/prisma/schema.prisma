@@ -41,7 +41,7 @@ model Booking {
   seats          String
   price          Float
   total          Float
-  bookingCode    String   @unique
+  bookingCode String @default(uuid()) @unique
   paymentMethod  String
   createdAt      DateTime @default(now())
 

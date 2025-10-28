@@ -13,6 +13,9 @@ const bookingSchema = z.object({
     .nonempty({ message: "Minimal pilih 1 kursi" }),
   price: z.number({ required_error: "price wajib diisi" }).positive(),
   total: z.number({ required_error: "total wajib diisi" }).positive(),
+  paymentMethod: z
+    .string({ required_error: "paymentMethod wajib diisi" })
+    .min(1),
 });
 
 export const createBooking = async (req, res) => {
@@ -36,8 +39,18 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    const { movieId, title, poster, cinema, date, time, seats, price, total } =
-      parsed.data;
+    const {
+      movieId,
+      title,
+      poster,
+      cinema,
+      date,
+      time,
+      seats,
+      price,
+      total,
+      paymentMethod,
+    } = parsed.data;
 
     console.log("🧩 [DEBUG] Data setelah parsing:", parsed.data);
 
@@ -78,6 +91,7 @@ export const createBooking = async (req, res) => {
         seats: seatsString,
         price,
         total,
+        paymentMethod, // ← ini penting
       },
     });
 

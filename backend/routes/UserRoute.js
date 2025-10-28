@@ -7,7 +7,7 @@ import {
   updateProfile,
   uploadAvatar,
 } from "../controllers/UserController.js";
-import { authenticate } from "../middleware/auth.js";
+import { authenticate } from "../middleware/Auth.js";
 
 const router = express.Router();
 

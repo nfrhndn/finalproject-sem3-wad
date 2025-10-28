@@ -7,7 +7,7 @@ import {
   checkoutCart,
   updateCartItem,
 } from "../controllers/CartController.js";
-import { authenticate } from "../middleware/auth.js";
+import { authenticate } from "../middleware/Auth.js";
 
 const router = express.Router();
 
