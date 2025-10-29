@@ -18,7 +18,6 @@ import ManageMovies from "./pages/admin/ManageMovies";
 import ManageTickets from "./pages/admin/ManageTickets";
 import ManageUsers from "./pages/admin/ManageUsers";
 import AdminLayout from "./layouts/AdminLayout";
-import AdminLogin from "./pages/admin/AdminLogin";
 
 import AdminRoute from "./components/AdminRoute";
 
@@ -62,8 +61,6 @@ const App = () => {
           <Route path="/checkout/:movieId" element={<Checkout />} />
           <Route path="/tiket" element={<Tiket />} />
           <Route path="/profile" element={<Profile />} />
-
-          <Route path="/admin/login" element={<AdminLogin />} />
 
           <Route
             path="/admin/*"
