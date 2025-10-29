@@ -40,7 +40,6 @@ export const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 📌 Admin otomatis jika email admin
     const role = email === "admin@cinemaplus.com" ? "ADMIN" : "USER";
 
     const newUser = await prisma.user.create({

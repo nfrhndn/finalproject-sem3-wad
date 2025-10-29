@@ -29,12 +29,10 @@ export default function Login() {
     }
 
     try {
-      // login() mengembalikan { user, token }
       const result = await login(email, password);
-      // set hanya bagian user ke state loggedUser
       setLoggedUser(result.user ?? null);
       setError(null);
-      setShowRolePopup(true); // tampilkan popup pilihan role
+      setShowRolePopup(true);
     } catch (err: any) {
       setError(err.message || "Login gagal, coba lagi.");
     }
@@ -131,11 +129,11 @@ export default function Login() {
         </p>
       </div>
 
-      {/* 🎯 Popup Pilih Role */}
+
       {showRolePopup && loggedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
           <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-96 text-center scale-100 transition-all duration-200 ease-out">
-            {/* Tombol Close */}
+
             <button
               onClick={() => setShowRolePopup(false)}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition"
@@ -144,7 +142,6 @@ export default function Login() {
               ✕
             </button>
 
-            {/* Header */}
             <div className="mb-4">
               <h3 className="text-xl font-semibold text-gray-800">
                 Halo, {firstName} 👋
@@ -154,7 +151,6 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Tombol Role (dinamis sesuai role user) */}
             {loggedUser.role === "ADMIN" ? (
               <button
                 onClick={() => handleRoleSelect("ADMIN")}

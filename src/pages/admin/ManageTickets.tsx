@@ -1,4 +1,3 @@
-// src/pages/admin/ManageTickets.tsx
 export default function ManageTickets() {
     return (
         <div className="p-6">

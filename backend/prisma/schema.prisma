@@ -78,6 +78,7 @@ model Movie {
   title        String
   description  String?        @default("Deskripsi tidak tersedia.")
   duration     Int?
+  rating       Float?
   releaseDate  DateTime?
   posterUrl    String?
   backdropUrl  String?        // background poster TMDB

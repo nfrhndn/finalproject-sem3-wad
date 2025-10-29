@@ -177,6 +177,13 @@ export const getPublishedMovies = async (req, res) => {
     const movies = await prisma.movie.findMany({
       where: { status: "PUBLISHED", isPublished: true },
       orderBy: { createdAt: "desc" },
+      include: {
+        genres: {
+          include: {
+            genre: true,
+          },
+        },
+      },
     });
 
     const formatted = await Promise.all(
@@ -213,5 +220,49 @@ export const getUpcomingMovies = async (req, res) => {
   } catch (error) {
     console.error("❌ Error getUpcomingMovies:", error);
     res.status(500).json({ error: "Gagal mengambil film akan tayang" });
+  }
+};
+
+export const getTrailer = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let movie = await prisma.movie.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!movie) {
+      movie = await prisma.movie.findFirst({
+        where: { tmdbId: Number(id) },
+      });
+    }
+
+    if (!movie) {
+      return res.status(404).json({ error: "Film tidak ditemukan di database." });
+    }
+
+    if (movie.trailerUrl) {
+      return res.json({ trailerUrl: movie.trailerUrl });
+    }
+
+    if (!movie.tmdbId) {
+      return res.status(400).json({ error: "Film tidak memiliki tmdbId yang valid." });
+    }
+
+    const trailerUrl = await fetchTrailerUrl(movie.tmdbId);
+
+    if (trailerUrl) {
+      await prisma.movie.update({
+        where: { id: movie.id },
+        data: { trailerUrl },
+      });
+
+      return res.json({ trailerUrl });
+    } else {
+      return res.status(404).json({ error: "Trailer tidak ditemukan di TMDB." });
+    }
+  } catch (error) {
+    console.error("❌ Error getTrailer:", error.message);
+    res.status(500).json({ error: "Gagal mengambil trailer." });
   }
 };

@@ -10,15 +10,17 @@ import {
   getPublishedMovies,
   getUpcomingMovies,
   importMoviesFromTMDB,
+  getTrailer,
 } from "../controllers/MovieController.js";
+
 import { verifyToken, verifyAdmin } from "../middleware/Auth.js";
 
 const router = express.Router();
-
 router.get("/popular", getPopular);
 router.get("/now_playing", getNowPlaying);
 router.get("/published", getPublishedMovies);
 router.get("/upcoming", getUpcomingMovies);
+router.get("/:id/trailer", getTrailer);
 router.get("/:id", getMovieDetail);
 router.get("/", getAllMovies);
 

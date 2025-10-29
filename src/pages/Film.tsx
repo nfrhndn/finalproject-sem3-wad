@@ -61,16 +61,18 @@ const Film = () => {
 
   const handleTrailer = async (movieId: number) => {
     try {
-      const res = await fetch(`${BASE_URL}/${movieId}`);
-      if (!res.ok) throw new Error("Gagal fetch detail film dari backend");
+      const res = await fetch(`${BASE_URL}/${movieId}/trailer`);
+      if (!res.ok) throw new Error("Gagal fetch trailer dari backend");
+
       const data = await res.json();
 
-      const youtubeVideo = data.videos?.results.find(
-        (vid: any) => vid.site === "YouTube" && vid.type === "Trailer"
-      );
-
-      if (youtubeVideo) {
-        setTrailerKey(youtubeVideo.key);
+      if (data.trailerUrl) {
+        const match = data.trailerUrl.match(/v=([^&]+)/);
+        if (match && match[1]) {
+          setTrailerKey(match[1]);
+        } else {
+          alert("Trailer tidak tersedia.");
+        }
       } else {
         alert("Trailer tidak tersedia.");
       }
